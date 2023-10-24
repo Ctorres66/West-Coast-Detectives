@@ -70,7 +70,7 @@ def main():
         p2.x = p2Pos[0]
         p2.y = p2Pos[1]
         p2.update()
-        for event in pygame.event.get() :
+        for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()

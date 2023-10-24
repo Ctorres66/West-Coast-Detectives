@@ -5,7 +5,8 @@ import sys
 #localhost currently (only people connected to Carlos' router can connect)
 #first run server script, then run client scripts
 
-server = "192.168.1.149"
+#server value must be your wifis ipv4 address
+server = "172.16.0.13"
 port = 5555
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -63,7 +64,7 @@ currentPlayer = 0
 while True:
     conn, addr = s.accept()
     print("Connected to ", addr)
-    start_new_thread(threaded_client, (conn,currentPlayer))
+    start_new_thread(threaded_client, (conn, currentPlayer))
     currentPlayer += 1
 
 
