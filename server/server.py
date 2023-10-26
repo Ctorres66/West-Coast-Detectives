@@ -1,5 +1,6 @@
 import socket
 from _thread import *
+from constants import *
 import sys
 
 #localhost currently (only people connected to Carlos' router can connect)
@@ -8,6 +9,7 @@ import sys
 #server value must be your wifis ipv4 address
 server = "172.16.0.13"
 port = 5555
+max_players = MAX_PLAYERS
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -17,7 +19,7 @@ except socket.error as e:
     str(e)
 
 # 6 is the maximum player # for Clue-Less
-s.listen(2)
+s.listen(max_players)
 print("Waiting for a Connection, Server Started")
 
 
