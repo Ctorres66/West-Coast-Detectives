@@ -1,5 +1,5 @@
 import pygame
-from board import Room, Board
+from constants.board import Room, Board
 
 # Pygame initialization
 pygame.init()

@@ -1,7 +1,6 @@
 import pygame
 from network import network
 from player import Player
-from constants import *
 
 width = WIDTH
 height = HEIGHT

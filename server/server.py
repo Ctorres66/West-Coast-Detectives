@@ -1,13 +1,12 @@
 import socket
 from _thread import *
-from constants import *
-import sys
+from constants.constants import *
 
 #localhost currently (only people connected to Carlos' router can connect)
 #first run server script, then run client scripts
 
 #server value must be your wifis ipv4 address
-server = "172.16.0.13"
+server = "10.0.0.61"
 port = 5555
 max_players = MAX_PLAYERS
 
