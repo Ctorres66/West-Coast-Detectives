@@ -59,6 +59,7 @@ class Room:
 
 class Button:
     def __init__(self, x, y, width, height, color, text, text_color=DEFAULT_TEXT_COLOR, font_size=30):
+        self.font = None
         self.rect = pygame.Rect(x, y, width, height)
         self.color = color
         self.text = text

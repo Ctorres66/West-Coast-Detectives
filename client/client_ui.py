@@ -79,7 +79,7 @@ class NotificationBox:
         # Draw the notification box
         pygame.draw.rect(screen, self.color, self.rect)
         # Display the messages
-        font = pygame.font.SysFont(None, 24)
+        font = pygame.font.SysFont('arial', 24)
         for idx, message in enumerate(self.messages):
             text_surface = font.render(message, True, (0, 0, 0))
             screen.blit(text_surface, (self.rect.x + 5, self.rect.y + 5 + idx * 20))
