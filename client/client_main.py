@@ -9,7 +9,7 @@ from client_ui import ClientUI
 def main():
     pygame.init()
     # Assuming your server IP and port are correct
-    network = ClientNetwork('23.120.34.43', 5555)
+    network = ClientNetwork('10.0.0.61', 5555)
     game = ClientGame(network)
     ui = ClientUI(game)  # Pass the game instance to the UI
 
