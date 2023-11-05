@@ -1,3 +1,6 @@
+
+PORT = 5555
+
 MAX_PLAYERS = 6
 
 WIDTH, HEIGHT = 800, 800
@@ -5,18 +8,15 @@ ROWS, COLS = 5, 5
 SQUARE_SIZE = 100
 
 # Define colors using RGB tuples
-COLOR_RED = (255,0,0)
-COLOR_YELLOW = (255,255,0)
-COLOR_MAGENTA = (255,0,255)
-COLOR_GREEN = (0,255,0)
-COLOR_BLUE = (0,0,255)
-COLOR_PURPLE = (75,0,130)
+COLOR_RED = (255, 0, 0)
+COLOR_YELLOW = (255, 255, 0)
+COLOR_MAGENTA = (255, 0, 255)
+COLOR_GREEN = (0, 255, 0)
+COLOR_BLUE = (0, 0, 255)
+COLOR_PURPLE = (75, 0, 130)
 COLOR_WHITE = (255, 255, 255)
 COLOR_BLACK = (0, 0, 0)
 COLOR_GRAY = (128, 128, 128)
-
-#constants for gameEngine
-# constants.py
 
 # Define your screen dimensions
 SCREEN_WIDTH = 800
@@ -31,8 +31,7 @@ BUTTON_MARGIN = 10
 NOTIFICATION_HEIGHT = 100
 CARD_DISPLAY_HEIGHT = 150
 
-
-#constants for suspect names
+# constants for suspect names
 SUSPECT = 'Suspect'
 
 MUSTARD = 'Colonel Mustard'
@@ -51,7 +50,7 @@ SUSPECTS = [
     PEACOCK
 ]
 
-#constants for weapon names
+# constants for weapon names
 WEAPON = 'Weapon'
 
 ROPE = 'Rope'
@@ -70,7 +69,7 @@ WEAPONS = [
     REVOLVER
 ]
 
-#constants for rooms
+# constants for rooms
 ROOM = 'Room'
 KITCHEN = 'Kitchen'
 BALLROOM = 'Ballroom'
@@ -94,8 +93,7 @@ ROOMS = [
     DINING_ROOM
 ]
 
-
-#constants for hallways
+# constants for hallways
 STUDY_LIBRARY = 'study-library hallway'
 STUDY_HALL = 'study-hall hallway'
 HALL_BILLIARD = 'hall-billiard hallway'
