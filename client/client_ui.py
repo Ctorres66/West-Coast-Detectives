@@ -1,30 +1,51 @@
 import pygame
 
 from shared.game_entities import Button
-from shared.game_constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
 class ClientUI:
-    def __init__(self, game):
-        self.game = game  # Store the game state
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        pygame.display.set_caption("Clue-Less Game")
+    def __init__(self, game, width=800, height=600):
+        self.game = game  # This is an instance of the ClientGame class
+        self.width = width
+        self.height = height
+        self.screen = pygame.display.set_mode((self.width, self.height))
+        pygame.display.set_caption("Clueless")
+        # Load images or fonts here
+        # self.background_image = pygame.image.load('path_to_background_image.png')
+        # self.font = pygame.font.SysFont('Arial', 24)
 
-    def draw(self):
-        # Clear the screen
-        self.screen.fill((255, 255, 255))  # Assuming white is the desired background color
-        # Draw game-related elements (players, rooms, etc.)
-        # You would access the game state via self.game here
-        # Example: self.game.board.draw(self.screen)
+        # Initialize the UI components here
+        self.board_panel = BoardPanel(
+            board=self.game.board,
+            button_panel=ButtonPanel(
+                x=0, y=self.height - 100,  # Example position
+                button_width=80,
+                button_height=30,
+                button_color=(100, 200, 255),
+                buttons_info=[("Button1", (255, 255, 255)), ("Button2", (255, 255, 255))]
+            ),
+            notification_box=NotificationBox(
+                x=0, y=0,
+                width=self.width,
+                height=50  # Example size
+            ),
+            cards=[]  # Initialize with actual card data
+        )
 
-        # Refresh the display
-        pygame.display.flip()
+    def update(self):
+        """Update the entire game UI."""
+        self.screen.fill((0, 0, 0))  # Clear the screen with black or any background
+        self.board_panel.draw(self.screen)
+        pygame.display.flip()  # Update the full display Surface to the screen
 
     def handle_events(self, event):
-        # Handle user input events
+        """Handle UI-related events."""
         if event.type == pygame.MOUSEBUTTONDOWN:
-            pass  # Add logic for mouse button down events
-        # Add logic for other events if necessary
+            clicked_button = self.board_panel.button_panel.check_click(event)
+            if clicked_button:
+                # Handle the button click event
+                pass
+        # Handle other events like button clicks, mouse hover, etc.
 
 
 class BoardPanel:

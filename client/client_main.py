@@ -4,14 +4,22 @@ import pygame
 from client_game import ClientGame
 from client_network import ClientNetwork
 from client_ui import ClientUI
+from client_player import ClientPlayer
 
 
 def main():
+
+    # Initialize Pygame
     pygame.init()
-    # Assuming your server IP and port are correct
-    network = ClientNetwork('23.120.34.43', 5555)
+    screen = pygame.display.set_mode((800, 600))  # Set the desired window size
+    pygame.display.set_caption("Game Title")  # Set your window title
+
+    # Initialize client components
+    network = ClientNetwork('Royas-Air.attlocal.net', 5555)  # Replace with actual server IP and port
     game = ClientGame(network)
-    ui = ClientUI(game)  # Pass the game instance to the UI
+    ui = ClientUI(game)
+
+    clock = pygame.time.Clock()  # Create a clock object to manage frame rate
 
     running = True
     while running:
@@ -19,18 +27,23 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             # Handle other events like key presses, mouse movements, etc.
+            else:
+                # Delegate other event handling to the game logic
+                game.handle_input(event)
+                ui.handle_events(event)
 
         # Network communication
-        # Send and receive data here if needed, for example:
-        # server_response = network.send("Your data here")
-        # Update the game state based on server_response, if applicable
+        game.update()
 
         # UI and game state updates
         game.update()
-        ui.draw()
+        ui.update()
 
-        pygame.display.flip()  # Update the full display Surface to the screen
-        pygame.time.Clock().tick(60)  # Maintain 60 frames per second
+        # Update the display
+        pygame.display.flip()
+
+        # Maintain a frame rate
+        clock.tick(60)
 
     # When you're done running, you should properly close the network connection
     network.client.close()

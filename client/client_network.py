@@ -13,14 +13,14 @@ class ClientNetwork:
         try:
             self.client.connect(self.addr)
         except socket.error as e:
-            print("Connection error:", e)
+            print(f"Connection error: {e}")
 
     def send(self, data):
         try:
             self.client.send(str.encode(data))
             return self.client.recv(2048).decode()
         except socket.error as e:
-            print(e)
+            print(f"Sending error: {e}")
 
     def receive(self, bufsize=2048):
         """
@@ -32,5 +32,5 @@ class ClientNetwork:
             data = self.client.recv(bufsize).decode()
             return data
         except socket.error as e:
-            print("Error receiving data from the server:", e)
+            print(f"Receiving error: {e}")
             return None
