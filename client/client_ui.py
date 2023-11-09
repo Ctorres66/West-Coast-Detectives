@@ -1,3 +1,4 @@
+# ClientUI only for pygame draw without any data
 import pygame
 
 from shared.game_entities import Button
@@ -16,7 +17,6 @@ class ClientUI:
 
         # Initialize the UI components here
         self.board_panel = BoardPanel(
-            board=self.game.board,
             button_panel=ButtonPanel(
                 x=0, y=self.height - 100,  # Example position
                 button_width=80,
@@ -32,10 +32,10 @@ class ClientUI:
             cards=[]  # Initialize with actual card data
         )
 
-    def update(self):
+    def update(self, board):
         """Update the entire game UI."""
         self.screen.fill((0, 0, 0))  # Clear the screen with black or any background
-        self.board_panel.draw(self.screen)
+        self.board_panel.draw(self.screen, board)
         pygame.display.flip()  # Update the full display Surface to the screen
 
     def handle_events(self, event):
@@ -49,15 +49,13 @@ class ClientUI:
 
 
 class BoardPanel:
-    def __init__(self, board, button_panel, notification_box, cards):
-        self.board = board
+    def __init__(self, button_panel, notification_box, cards):
         self.button_panel = button_panel
         self.notification_box = notification_box
         self.cards = cards  # This could be a list of card objects or images
 
-    def draw(self, screen):
-        # Draw the board
-        self.board.draw(screen)
+    def draw(self, screen, board):
+        board.draw(screen)
         # Draw the button panel
         self.button_panel.draw(screen)
         # Draw the notification box

@@ -4,11 +4,9 @@ import pygame
 from client_game import ClientGame
 from client_network import ClientNetwork
 from client_ui import ClientUI
-from client_player import ClientPlayer
 
 
 def main():
-
     # Initialize Pygame
     pygame.init()
     screen = pygame.display.set_mode((800, 600))  # Set the desired window size
@@ -34,10 +32,7 @@ def main():
 
         # Network communication
         game.update()
-
-        # UI and game state updates
-        game.update()
-        ui.update()
+        ui.update(game.board)
 
         # Update the display
         pygame.display.flip()

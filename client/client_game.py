@@ -1,13 +1,14 @@
-import pygame
 import json  # Assuming JSON is used for server communication
-from shared.game_entities import Board, Room
+
+import pygame
+
+from shared.game_entities import Board
 
 
 class ClientGame:
     def __init__(self, network):
         self.network = network
-        self.board = Board(5, 5)  # Assuming a 5x5 board for the game
-        # self.player = Player()  # Uncomment and define Player class as needed
+        self.board = None
 
     def update(self):
         # Handle local game state updates that are not dependent on server data
@@ -25,23 +26,22 @@ class ClientGame:
         Process the data received from the server.
         """
         try:
+            parsed_data = json.loads(data)
             # Assuming the data from the server is in JSON format
             print("server data is: {}".format(data))
 
-            parsed_data = json.loads(data)
-
             # Here, we need to update our game state based on the received data
-            # This will depend on the structure of the data sent from the server
-            # For example, if the server sends a complete board state:
-            self.update_board(parsed_data['board'])
+            self.update_board(parsed_data)
         except json.JSONDecodeError as e:
             print(f"Error decoding server data: {e}")
 
     def update_board(self, board_data):
-        # Update the board based on the received data
-        # You will need to implement this depending on your game's logic
-        # and the format of the board data
-        pass
+        # Initialize the board if the response contains metadata
+        if board_data.get('metadata') is not None:
+            self.board = Board(rows=None, cols=None, dict_data=board_data)
+        # else:
+        # only need pass player info here
+        # self.board.update_location(board_data)
 
     def update_local_state(self):
         """
@@ -70,7 +70,7 @@ class ClientGame:
             if event.key == pygame.K_UP:
                 # Example action
                 self.send_player_action({'action': 'move', 'direction': 'up'})
-            # Handle other keypresses and input events
+            # Handle other key presses and input events
 
         # You can also process mouse events, etc.
 

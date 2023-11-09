@@ -1,3 +1,5 @@
+import json
+
 import pygame
 import os
 
@@ -8,21 +10,50 @@ DEFAULT_TEXT_COLOR = (0, 0, 0)
 
 
 class Board:
-    def __init__(self, rows, cols):
-        self.rows = rows
-        self.cols = cols
-        self.grid = [[None for _ in range(cols)] for _ in range(rows)]
+    def __init__(self, rows=None, cols=None, dict_data=None):
+        if dict_data is not None:
+            metadata = dict_data.get('metadata')
+            self.rows = metadata.get('num_rows')
+            self.cols = metadata.get('num_cols')
+            self.grid = [[None for _ in range(self.cols)] for _ in range(self.rows)]
+            for room_dict in dict_data.get('rooms'):
+                room = room_dict.get('room')
+                self.grid[room_dict.get('x')][room_dict.get('y')] = Room(room.get('name'), room.get('image_filename'))
+        else:
+            self.rows = rows
+            self.cols = cols
+            self.grid = [[None for _ in range(cols)] for _ in range(rows)]
 
     def add_room(self, room, x, y):
-        if 0 <= x < self.cols and 0 <= y < self.rows:
-            self.grid[y][x] = room
+        if 0 <= x < self.rows and 0 <= y < self.cols:
+            self.grid[x][y] = room
+
+    # Function to encode the current Board state to Json format
+    def encode(self):
+        board_data = {
+            'metadata': {
+                'num_rows': self.rows,
+                'num_cols': self.cols,
+            },
+            'rooms': []
+        }
+        for x, row in enumerate(self.grid):
+            for y, room in enumerate(row):
+                if room is None:
+                    continue
+                board_data.get('rooms').append({
+                    'x': x,
+                    'y': y,
+                    'room': room.to_dict(),
+                })
+        return json.dumps(board_data, indent=4)
 
     def draw(self, surface):
         cell_width = surface.get_width() // self.cols
         cell_height = surface.get_height() // self.rows
 
-        for y, row in enumerate(self.grid):
-            for x, room in enumerate(row):
+        for x, row in enumerate(self.grid):
+            for y, room in enumerate(row):
                 rect = pygame.Rect(x * cell_width, y * cell_height, cell_width, cell_height)
                 if room:
                     room.draw(surface, rect)
@@ -46,6 +77,12 @@ class Room:
         except pygame.error as e:
             print(f"Error loading image for room '{self.name}': {e}")
             self.image = None  # Set to None if there's an error loading
+
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'image_filename': self.image_filename,
+        }
 
     def draw(self, surface, rect):
         if self.image:

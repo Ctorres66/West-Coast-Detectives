@@ -19,19 +19,6 @@ class ServerGame:
             "Hall": {"coords": (0, 2), "image": "Hall.jpg"},
             "Lounge": {"coords": (0, 4), "image": "Lounge.jpg"},
             "Dining Room": {"coords": (2, 4), "image": "Dining_Room.jpg"},
-            # Rooms without images just have coordinates
-            "Study_Library": {"coords": (1, 0)},
-            "Study_Hall": {"coords": (0, 1)},
-            "Hall_Billiard": {"coords": (1, 2)},
-            "Hall_Lounge": {"coords": (0, 3)},
-            "Lounge_Dining": {"coords": (1, 4)},
-            "Library_Conservatory": {"coords": (3, 0)},
-            "Library_Billiard": {"coords": (2, 1)},
-            "Billiard_Ballroom": {"coords": (3, 2)},
-            "Billiard_Dining": {"coords": (2, 3)},
-            "Dining_Kitchen": {"coords": (3, 4)},
-            "Conservatory_Ballroom": {"coords": (4, 1)},
-            "Ballroom_Kitchen": {"coords": (4, 3)},
         }
 
         # When initializing rooms, check if an image is provided

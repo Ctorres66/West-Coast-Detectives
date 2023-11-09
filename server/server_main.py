@@ -27,7 +27,7 @@ class Server:
         print(f"Connected to: {addr}")
 
         # Send initial game state or welcome message
-        conn.sendall(str.encode("Welcome to the server!"))
+        conn.sendall(str.encode(self.game_engine.board.encode()))
 
         while True:
             try:
