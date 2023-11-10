@@ -1,4 +1,4 @@
-class Player:
+class ClientPlayer:
     def __init__(self, player_id, current_location, game):
         self.player_id = player_id
         self.current_location = current_location  # Could be a Room or Hallway object
