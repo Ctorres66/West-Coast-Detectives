@@ -13,7 +13,7 @@ def main():
     pygame.display.set_caption("Game Title")  # Set your window title
 
     # Initialize client components
-    network = ClientNetwork('Royas-MacBook-Air.local', 5555)  # Replace with actual server IP and port
+    network = ClientNetwork('LAPTOP-UGJ09KMA', 5555)  # Replace with actual server IP and port
     game = ClientGame(network)
     ui = ClientUI(game)
 

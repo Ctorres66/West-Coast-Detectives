@@ -26,6 +26,9 @@ class ServerGame:
             x, y = properties["coords"]
             image_filename = properties.get("image", None)  # Use 'get' to return None if no image is present
             room = Room(room_name, image_filename) if image_filename else Room(room_name)
+            if room_name == "Kitchen" or "Study" or "Lounge" or "Kitchen":
+                room.has_secret_passage = True
+
             self.board.add_room(room, x, y)
 
     def process_client_action(self, data):
