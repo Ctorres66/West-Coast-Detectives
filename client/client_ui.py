@@ -1,15 +1,17 @@
 # ClientUI only for pygame draw without any data
 import pygame
 
+from shared.game_constants import COLOR_WHITE, COLOR_GRAY, COLOR_YELLOW, SCREEN_WIDTH, SCREEN_HEIGHT, BUTTON_HEIGHT, \
+    BUTTON_MARGIN, BOX_WIDTH, BOX_HEIGHT
 from shared.game_entities import Button
 
 
 class ClientUI:
-    def __init__(self, game, width=800, height=600):
+    def __init__(self, game):
         self.game = game  # This is an instance of the ClientGame class
-        self.width = width
-        self.height = height
-        self.screen = pygame.display.set_mode((self.width, self.height))
+        self.screen_width = SCREEN_WIDTH
+        self.screen_height = SCREEN_HEIGHT
+        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption("Clueless")
         # Load images or fonts here
         # self.background_image = pygame.image.load('path_to_background_image.png')
@@ -17,24 +19,14 @@ class ClientUI:
 
         # Initialize the UI components here
         self.board_panel = BoardPanel(
-            button_panel=ButtonPanel(
-                x=0, y=self.height - 100,  # Example position
-                button_width=80,
-                button_height=30,
-                button_color=(100, 200, 255),
-                buttons_info=[("Button1", (255, 255, 255)), ("Button2", (255, 255, 255))]
-            ),
-            notification_box=NotificationBox(
-                x=0, y=0,
-                width=self.width,
-                height=50  # Example size
-            ),
+            button_panel=ButtonPanel(x=50, y=10),
+            notification_box=NotificationBox(x=850, y=100),
             cards=[]  # Initialize with actual card data
         )
 
     def update(self, board):
         """Update the entire game UI."""
-        self.screen.fill((0, 0, 0))  # Clear the screen with black or any background
+        self.screen.fill(COLOR_WHITE)  # Clear the screen with black or any background
         self.board_panel.draw(self.screen, board)
         pygame.display.flip()  # Update the full display Surface to the screen
 
@@ -66,11 +58,15 @@ class BoardPanel:
 
 
 class ButtonPanel:
-    def __init__(self, x, y, button_width, button_height, button_color, buttons_info):
+    def __init__(self, x, y):
         self.buttons = []
-        for i, (text, text_color) in enumerate(buttons_info):
-            button_x = x + (button_width + 10) * i  # 10 pixels between buttons
-            button = Button(button_x, y, button_width, button_height, button_color, text, text_color)
+        colors = [(239, 244, 248), (192, 211, 228), (243, 219, 233), (149, 155, 189)]
+        texts = ["MOVE", "SUGGESTION", "ACCUSATION", "END TURN"]
+
+        for i, (color, text) in enumerate(zip(colors, texts)):
+            # Calculate the y position for each button
+            y = BUTTON_HEIGHT + i * (BUTTON_HEIGHT + BUTTON_MARGIN)
+            button = Button(x, y, text, color)
             self.buttons.append(button)
 
     def draw(self, screen):
@@ -80,16 +76,16 @@ class ButtonPanel:
     def check_click(self, event):
         for button in self.buttons:
             if button.is_clicked(event):
-                print(f"{button.text} button was clicked")  # Placeholder for actual button click handling
-                return button.text  # You can also call a method here or pass a callback to each button
+                print(f"{button.text} button was clicked")
+                return button.text
         return None
 
 
 class NotificationBox:
-    def __init__(self, x, y, width, height, color=(255, 255, 255)):
+    def __init__(self, x, y, width=BOX_WIDTH, height=BOX_HEIGHT):
         self.rect = pygame.Rect(x, y, width, height)
-        self.color = color
-        self.messages = []
+        self.color = COLOR_GRAY
+        self.messages = ["Game Start!"]
 
     def add_message(self, message):
         self.messages.append(message)

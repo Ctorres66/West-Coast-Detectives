@@ -3,10 +3,11 @@ import json
 import pygame
 import os
 
+from shared.game_constants import BUTTON_WIDTH, BUTTON_HEIGHT, COLOR_BLACK, ROOM_WIDTH, ROOM_HEIGHT
+
 # Constants for image path and default colors
 IMAGE_PATH = 'assets/images/'
 DEFAULT_EMPTY_COLOR = pygame.Color('lightslategrey')
-DEFAULT_TEXT_COLOR = (0, 0, 0)
 
 
 class Board:
@@ -48,17 +49,43 @@ class Board:
                 })
         return json.dumps(board_data, indent=4)
 
-    def draw(self, surface):
-        cell_width = surface.get_width() // self.cols
-        cell_height = surface.get_height() // self.rows
-
+    def draw_rooms(self, surface, start_x, start_y, room_width, room_height):
         for x, row in enumerate(self.grid):
             for y, room in enumerate(row):
-                rect = pygame.Rect(x * cell_width, y * cell_height, cell_width, cell_height)
+                # Calculate the position for each room
+                rect_x = start_x + x * room_width
+                rect_y = start_y + y * room_height
+                rect = pygame.Rect(rect_x, rect_y, room_width, room_height)
+
+                # Draw the room if it exists, otherwise draw an empty rectangle
                 if room:
                     room.draw(surface, rect)
                 else:
                     pygame.draw.rect(surface, DEFAULT_EMPTY_COLOR, rect, 1)
+
+    def draw_board_outline(self, surface, start_x, start_y, room_width, room_height):
+        # Calculate the total width and height of the board based on rooms
+        board_width = self.cols * room_width
+        board_height = self.rows * room_height
+
+        # Create a rectangle representing the board's border
+        board_rect = pygame.Rect(start_x, start_y, board_width, board_height)
+
+        # Draw the board's border on the surface
+        pygame.draw.rect(surface, pygame.Color(COLOR_BLACK), board_rect, 2)  # The '2' is the thickness of the border
+
+    def draw(self, surface):
+        # Define starting position, room width, and height
+        start_x = 300
+        start_y = 100
+        room_width = ROOM_WIDTH  # This should be defined somewhere in your code
+        room_height = ROOM_HEIGHT  # This should be defined somewhere in your code
+
+        # Draw the rooms on the board
+        self.draw_rooms(surface, start_x, start_y, room_width, room_height)
+
+        # Draw the board outline
+        self.draw_board_outline(surface, start_x, start_y, room_width, room_height)
 
 
 class Room:
@@ -95,22 +122,27 @@ class Room:
 
 
 class Button:
-    def __init__(self, x, y, width, height, color, text, text_color=DEFAULT_TEXT_COLOR):
+    def __init__(self, x, y, text, color):
         self.font = pygame.font.SysFont('Arial', 24)
-        self.rect = pygame.Rect(x, y, width, height)
-        self.color = color
+        self.rect = pygame.Rect(x, y, BUTTON_WIDTH, BUTTON_HEIGHT)
+        self.color = color,
         self.text = text
-        self.text_color = text_color
+        self.text_color = COLOR_BLACK
+        self.width = BUTTON_WIDTH
+        self.height = BUTTON_HEIGHT
 
     def draw(self, screen):
+        # Draw the button rectangle
         pygame.draw.rect(screen, self.color, self.rect)
+        # Draw the button text
         self._draw_text(screen)
 
     def _draw_text(self, screen):
-        if self.text:
-            text_surface = self.font.render(self.text, True, self.text_color)
-            text_rect = text_surface.get_rect(center=self.rect.center)
-            screen.blit(text_surface, text_rect)
+        text_surface = self.font.render(self.text, True, self.text_color)
+        text_rect = text_surface.get_rect(center=self.rect.center)
+
+        # Blit the text onto the surface
+        screen.blit(text_surface, text_rect)
 
     def is_clicked(self, event):
         return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)
