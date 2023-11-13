@@ -1,4 +1,6 @@
-from shared.game_entities import Board, Room
+import random
+from shared.game_constants import *
+from shared.game_entities import Board, Room, Card
 
 
 class ServerGame:
@@ -6,27 +8,51 @@ class ServerGame:
         self.board = Board(5, 5)  # Assuming a 5x5 grid for the game board
         self.players = {}  # Dictionary to keep track of player states
         self.initialize_board()
+        self.deck = []  # This will hold all the cards
+        self.initialize_deck()
 
     def initialize_board(self):
-        # Define the rooms, with an 'image' key for rooms that have an image
-        rooms = {
-            "Kitchen": {"coords": (4, 4), "image": "Kitchen.png"},
-            "Ballroom": {"coords": (4, 2), "image": "Ballroom.png"},
-            "Conservatory": {"coords": (4, 0), "image": "Conservatory.png"},
-            "Billiard Room": {"coords": (2, 2), "image": "Billiard_Room.png"},
-            "Library": {"coords": (2, 0), "image": "Library.png"},
-            "Study": {"coords": (0, 0), "image": "Study.png"},
-            "Hall": {"coords": (0, 2), "image": "Hall.png"},
-            "Lounge": {"coords": (0, 4), "image": "Lounge.png"},
-            "Dining Room": {"coords": (2, 4), "image": "Dining_Room.png"},
-        }
 
-        # When initializing rooms, check if an image is provided
-        for room_name, properties in rooms.items():
-            x, y = properties["coords"]
-            image_filename = properties.get("image", None)  # Use 'get' to return None if no image is present
-            room = Room(room_name, image_filename) if image_filename else Room(room_name)
-            self.board.add_room(room, x, y)
+        # Initialize rooms on the board using the ROOMS constant
+        for room_name in ROOMS:
+            # Use the room name to construct the image filename dynamically
+            image_filename = f"{room_name.replace(' ', '_')}.png"
+            # Get the coordinates for the room from the Board instance
+            coords = self.board.get_coords_for_room(room_name)
+            # Create a Room instance
+            room = Room(room_name, image_filename)
+            # Add the room to the board at the specified coordinates
+            self.board.add_room(room, *coords)
+
+    def initialize_deck(self):
+        # Create suspect cards
+        for suspect in SUSPECTS:
+            self.deck.append(Card(SUSPECT, suspect))
+
+        # Create weapon cards
+        for weapon in WEAPONS:
+            self.deck.append(Card(WEAPON, weapon))
+
+        # Create room cards based on the ROOMS constant
+        for room_name in ROOMS:
+            self.deck.append(Card(ROOM, room_name))
+
+    def deal_cards(self):
+        # Shuffle the deck
+        random.shuffle(self.deck)
+
+        # Calculate the number of cards per player
+        num_players = len(self.players)
+        cards_per_player = len(self.deck) // num_players
+
+        # Deal the cards
+        for player_id in self.players:
+            player_hand = self.deck[:cards_per_player]
+            self.deck = self.deck[cards_per_player:]
+            self.players[player_id]['hand'] = player_hand
+
+            # Send the hand to the player
+            self.send_to_player(player_id, player_hand)
 
     def process_client_action(self, data):
         pass
@@ -49,6 +75,7 @@ class ServerGame:
 
     def start_game(self):
         # Logic to start a new game
+        self.deal_cards()
         pass
 
     def update_game_state(self):
