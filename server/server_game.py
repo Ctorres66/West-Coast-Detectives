@@ -10,15 +10,15 @@ class ServerGame:
     def initialize_board(self):
         # Define the rooms, with an 'image' key for rooms that have an image
         rooms = {
-            "Kitchen": {"coords": (4, 4), "image": "Kitchen.jpg"},
-            "Ballroom": {"coords": (4, 2), "image": "Ballroom.jpg"},
-            "Conservatory": {"coords": (4, 0), "image": "Conservatory.jpg"},
-            "Billiard Room": {"coords": (2, 2), "image": "Billiard_Room.jpg"},
-            "Library": {"coords": (2, 0), "image": "Library.jpg"},
-            "Study": {"coords": (0, 0), "image": "Study.jpg"},
-            "Hall": {"coords": (0, 2), "image": "Hall.jpg"},
-            "Lounge": {"coords": (0, 4), "image": "Lounge.jpg"},
-            "Dining Room": {"coords": (2, 4), "image": "Dining_Room.jpg"},
+            "Kitchen": {"coords": (4, 4), "image": "Kitchen.png"},
+            "Ballroom": {"coords": (4, 2), "image": "Ballroom.png"},
+            "Conservatory": {"coords": (4, 0), "image": "Conservatory.png"},
+            "Billiard Room": {"coords": (2, 2), "image": "Billiard_Room.png"},
+            "Library": {"coords": (2, 0), "image": "Library.png"},
+            "Study": {"coords": (0, 0), "image": "Study.png"},
+            "Hall": {"coords": (0, 2), "image": "Hall.png"},
+            "Lounge": {"coords": (0, 4), "image": "Lounge.png"},
+            "Dining Room": {"coords": (2, 4), "image": "Dining_Room.png"},
         }
 
         # When initializing rooms, check if an image is provided
