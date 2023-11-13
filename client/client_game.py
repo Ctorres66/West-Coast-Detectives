@@ -2,13 +2,14 @@ import json  # Assuming JSON is used for server communication
 
 import pygame
 
-from shared.game_entities import Board
+from shared.game_entities import Board, Card
 
 
 class ClientGame:
     def __init__(self, network):
         self.network = network
         self.board = None
+        self.hand = []  # The player's hand of cards
 
     def update(self):
         # Handle local game state updates that are not dependent on server data
@@ -73,6 +74,18 @@ class ClientGame:
             # Handle other key presses and input events
 
         # You can also process mouse events, etc.
+
+
+def receive_card_data(self, card_data_json):
+    # Deserialize the card data from JSON
+    card_data = json.loads(card_data_json)
+
+    # Assuming Card class has an appropriate constructor that accepts a dictionary
+    self.hand = [Card(**card_info) for card_info in card_data]
+
+    # Notify the UI to update the display
+    # This assumes you have a reference to the ClientUI instance
+    self.ui.update_hand(self.hand)
 
 # More methods can be added for handling specific aspects of the game,
 # like collision detection, player stats updates, and more.

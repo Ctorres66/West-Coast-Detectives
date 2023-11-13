@@ -33,7 +33,8 @@ BOX_HEIGHT = 300
 
 ROOM_WIDTH = 100
 ROOM_HEIGHT = 100
-CARD_DISPLAY_HEIGHT = 150
+CARD_WIDTH = 100
+CARD_HEIGHT = 200
 
 # constants for suspect names
 SUSPECT = 'Suspect'

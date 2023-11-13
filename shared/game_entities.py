@@ -3,7 +3,7 @@ import json
 import pygame
 import os
 
-from shared.game_constants import BUTTON_WIDTH, BUTTON_HEIGHT, COLOR_BLACK, ROOM_WIDTH, ROOM_HEIGHT
+from shared.game_constants import *
 
 # Constants for image path and default colors
 IMAGE_PATH = 'assets/images/'
@@ -25,9 +25,25 @@ class Board:
             self.cols = cols
             self.grid = [[None for _ in range(cols)] for _ in range(rows)]
 
+        self.room_coords = {
+            KITCHEN: (4, 4),
+            BALLROOM: (4, 2),
+            CONSERVATORY: (4, 0),
+            BILLIARD_ROOM: (2, 2),
+            LIBRARY: (2, 0),
+            STUDY: (0, 0),
+            HALL: (0, 2),
+            LOUNGE: (0, 4),
+            DINING_ROOM: (2, 4),
+        }
+
     def add_room(self, room, x, y):
         if 0 <= x < self.rows and 0 <= y < self.cols:
             self.grid[x][y] = room
+
+    def get_coords_for_room(self, room_name):
+        # This method uses the predefined mapping to return the coordinates for a given room name
+        return self.room_coords.get(room_name)
 
     # Function to encode the current Board state to Json format
     def encode(self):
@@ -146,3 +162,66 @@ class Button:
 
     def is_clicked(self, event):
         return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)
+
+
+class Card:
+    def __init__(self, card_type, name, image_filename=None):
+        """
+        Initialize a new card with a type, name, and optional image.
+
+        :param card_type: The type of card (e.g., 'suspect', 'weapon', 'room')
+        :param name: The name of the card (e.g., 'Miss Scarlet', 'Rope', 'Kitchen')
+        :param image_filename: The filename of the image associated with the card
+        """
+        self.card_type = card_type
+        self.name = name
+        self.image_filename = image_filename
+
+    def __repr__(self):
+        """
+        Return a string representation of the card.
+
+        :return: String representation of the card
+        """
+        return f"Card('{self.card_type}', '{self.name}', '{self.image_filename}')"
+
+    def to_dict(self):
+        """
+        Serialize the card to a dictionary.
+
+        :return: A dictionary representation of the card
+        """
+        return {
+            'card_type': self.card_type,
+            'name': self.name,
+            'image_filename': self.image_filename
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        """
+        Create a Card instance from a dictionary.
+
+        :param data: A dictionary with keys 'card_type', 'name', and 'image_filename'
+        :return: A Card instance
+        """
+        return cls(data['card_type'], data['name'], data['image_filename'])
+
+    def to_json(self):
+        """
+        Serialize the card to a JSON string.
+
+        :return: A JSON string representation of the card
+        """
+        return json.dumps(self.to_dict())
+
+    @classmethod
+    def from_json(cls, json_str):
+        """
+        Create a Card instance from a JSON string.
+
+        :param json_str: A JSON string representation of a card
+        :return: A Card instance
+        """
+        data = json.loads(json_str)
+        return cls.from_dict(data)

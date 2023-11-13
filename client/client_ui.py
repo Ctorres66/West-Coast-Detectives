@@ -36,7 +36,7 @@ class ClientUI:
             clicked_button = self.board_panel.button_panel.check_click(event)
             if clicked_button:
                 # Handle the button click event
-                pass
+                print(f"{clicked_button} was clicked")
         # Handle other events like button clicks, mouse hover, etc.
 
 
@@ -53,8 +53,19 @@ class BoardPanel:
         # Draw the notification box
         self.notification_box.draw(screen)
         # Draw the cards
-        for card in self.cards:
-            card.draw(screen)
+        self.draw_cards(screen)
+
+    def draw_cards(self, screen):
+        # Define the starting position for the cards
+        start_x = 10  # 10 pixels from the left edge of the screen
+        start_y = self.notification_box.rect.bottom + 10  # 10 pixels below the notification box
+
+        # Draw each card in the hand
+        for index, card in enumerate(self.cards):
+            card_x = start_x + (index * (card.width + 10))  # Add space between cards
+            card_y = start_y
+            # Assuming the Card class has a draw method
+            card.draw(screen, (card_x, card_y))
 
 
 class ButtonPanel:
@@ -98,13 +109,3 @@ class NotificationBox:
         for idx, message in enumerate(self.messages):
             text_surface = font.render(message, True, (0, 0, 0))
             screen.blit(text_surface, (self.rect.x + 5, self.rect.y + 5 + idx * 20))
-
-
-class Card:
-    def __init__(self, image_filename, x, y, width, height):
-        self.image = pygame.image.load(image_filename)
-        self.image = pygame.transform.scale(self.image, (width, height))
-        self.rect = self.image.get_rect(topleft=(x, y))
-
-    def draw(self, screen):
-        screen.blit(self.image, self.rect)
