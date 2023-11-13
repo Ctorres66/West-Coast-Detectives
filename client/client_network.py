@@ -1,3 +1,4 @@
+import select
 import socket
 
 
@@ -23,14 +24,14 @@ class ClientNetwork:
             print(f"Sending error: {e}")
 
     def receive(self, bufsize=2048):
-        """
-        Receive data from the server.
-        :param bufsize: The maximum amount of data to be received at once.
-        :return: Decoded data received from the server.
-        """
         try:
-            data = self.client.recv(bufsize).decode()
-            return data
+            ready_to_read, _, _ = select.select([self.client], [], [], 0.5)
+            if ready_to_read:
+                data = self.client.recv(bufsize).decode()
+                return data
+            else:
+                # The socket wasn't ready for reading.
+                return None
         except socket.error as e:
             print(f"Receiving error: {e}")
             return None

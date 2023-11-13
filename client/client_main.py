@@ -40,6 +40,7 @@ def main():
         # Maintain a frame rate
         clock.tick(60)
 
+
     # When you're done running, you should properly close the network connection
     network.client.close()
     pygame.quit()
