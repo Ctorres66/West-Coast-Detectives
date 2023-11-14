@@ -26,6 +26,23 @@ class Server:
     def client_thread(self, conn, addr):
         print(f"Connected to: {addr}")
 
+        # Generate a unique player ID
+        # This can be a combination of address and a unique counter or timestamp
+        player_id = f"{addr[0]}_{addr[1]}"
+
+        # Gather player info. You might want to extend this with more relevant data.
+        player_info = {'address': addr, 'id': player_id}
+
+        # Check if the maximum number of players hasn't been exceeded
+        if len(self.game_engine.players) < 6:  # Assuming a max of 6 players
+            # Add the player to the game
+            self.game_engine.add_player(player_id, player_info)
+            print(f"Player {player_id} added to the game.")
+        else:
+            print("Maximum number of players reached. Connection refused.")
+            conn.close()
+            return
+
         # Send initial game state or welcome message
         conn.sendall(str.encode(self.game_engine.board.encode()))
 

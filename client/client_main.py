@@ -12,8 +12,11 @@ def main():
     screen = pygame.display.set_mode((800, 600))  # Set the desired window size
     pygame.display.set_caption("Game Title")  # Set your window title
 
+    server_ip = 'Royas-MacBook-Air.local'  # Replace with the actual server IP
+    port = 5555  # Assuming this is the port your server is listening on
     # Initialize client components
-    network = ClientNetwork('LAPTOP-UGJ09KMA', 5555)  # Replace with actual server IP and port
+    network = ClientNetwork(server_ip, port)  # Replace with actual server IP and port
+
     game = ClientGame(network)
     ui = ClientUI(game)
 
@@ -39,7 +42,6 @@ def main():
 
         # Maintain a frame rate
         clock.tick(60)
-
 
     # When you're done running, you should properly close the network connection
     network.client.close()
