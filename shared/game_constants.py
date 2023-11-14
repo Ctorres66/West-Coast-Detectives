@@ -55,6 +55,17 @@ SUSPECTS = [
     PEACOCK
 ]
 
+# Dictionary mapping each suspect to their starting position
+STARTING_POSITIONS = {
+    MUSTARD: (0, 0),  # Replace with actual coordinates or room identifiers
+    SCARLET: (1, 0),
+    PLUM: (2, 0),
+    GREEN: (3, 0),
+    WHITE: (4, 0),
+    PEACOCK: (0, 1),
+    # Add other characters if needed
+}
+
 # constants for weapon names
 WEAPON = 'Weapon'
 

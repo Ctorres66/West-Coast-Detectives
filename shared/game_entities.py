@@ -6,7 +6,6 @@ import os
 from shared.game_constants import *
 
 # Constants for image path and default colors
-IMAGE_PATH = 'assets/images/'
 DEFAULT_EMPTY_COLOR = pygame.Color('lightslategrey')
 
 
@@ -19,11 +18,15 @@ class Board:
             self.grid = [[None for _ in range(self.cols)] for _ in range(self.rows)]
             for room_dict in dict_data.get('rooms'):
                 room = room_dict.get('room')
-                self.grid[room_dict.get('x')][room_dict.get('y')] = Room(room.get('name'), room.get('image_filename'))
+                # Corrected index order: first 'y' (row), then 'x' (column)
+                x = room_dict.get('x')  # Column
+                y = room_dict.get('y')  # Row
+                if y is not None and x is not None:
+                    self.grid[y][x] = Room(room.get('name'), room.get('image_filename'))
         else:
-            self.rows = rows
-            self.cols = cols
-            self.grid = [[None for _ in range(cols)] for _ in range(rows)]
+            self.rows = rows if rows is not None else 0
+            self.cols = cols if cols is not None else 0
+            self.grid = [[None for _ in range(self.cols)] for _ in range(self.rows)]
 
         self.room_coords = {
             KITCHEN: (4, 4),
@@ -176,6 +179,10 @@ class Card:
         self.card_type = card_type
         self.name = name
         self.image_filename = image_filename
+        self.image = None  # Default to None if no image is provided
+
+        if image_filename:
+            self.load_image()
 
     def __repr__(self):
         """
@@ -183,7 +190,7 @@ class Card:
 
         :return: String representation of the card
         """
-        return f"Card('{self.card_type}', '{self.name}', '{self.image_filename}')"
+        return f"Card(Type: {self.card_type}, Name: {self.name})"
 
     def to_dict(self):
         """
@@ -225,3 +232,24 @@ class Card:
         """
         data = json.loads(json_str)
         return cls.from_dict(data)
+
+    def load_image(self):
+        # Assuming images are stored in a directory named 'images' under 'assets'
+        image_path = os.path.join('../assets/images', self.image_filename)
+        try:
+            self.image = pygame.image.load(image_path)
+        except pygame.error as e:
+            print(f"Error loading image for card '{self.name}': {e}")
+            self.image = None  # Set to None if there's an error loading
+
+    def draw(self, surface, position):
+        if self.image:
+            # Draw the card image at the given position
+            surface.blit(self.image, position)
+        else:
+            # Draw a placeholder or some text if the image is not available
+            # Example: draw card name as text
+            font = pygame.font.Font(None, 24)
+            text = font.render(self.name, True, pygame.Color('white'))
+            text_rect = text.get_rect(center=position)
+            surface.blit(text, text_rect)

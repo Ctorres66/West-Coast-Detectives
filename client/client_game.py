@@ -7,6 +7,7 @@ from shared.game_entities import Board, Card
 
 class ClientGame:
     def __init__(self, network):
+        self.ui = None
         self.network = network
         self.board = None
         self.hand = []  # The player's hand of cards
@@ -32,7 +33,13 @@ class ClientGame:
             print("server data is: {}".format(data))
 
             # Here, we need to update our game state based on the received data
-            self.update_board(parsed_data)
+            # Check for specific keys in the parsed data to identify the type of data
+            if 'hand' in parsed_data:
+                self.receive_card_data(parsed_data['hand'])
+            elif 'metadata' in parsed_data:
+                self.update_board(parsed_data)
+            # Add more conditions as needed based on the data structure sent by the server
+
         except json.JSONDecodeError as e:
             print(f"Error decoding server data: {e}")
 
@@ -75,17 +82,24 @@ class ClientGame:
 
         # You can also process mouse events, etc.
 
+    def receive_card_data(self, card_data):
+        """
+        Receive and process card data from the server.
 
-def receive_card_data(self, card_data_json):
-    # Deserialize the card data from JSON
-    card_data = json.loads(card_data_json)
+        :param card_data: A list of dictionaries, each representing a card
+        """
+        # Create Card objects from the received data
+        self.hand = [Card(**card_info) for card_info in card_data]
 
-    # Assuming Card class has an appropriate constructor that accepts a dictionary
-    self.hand = [Card(**card_info) for card_info in card_data]
+        # Print details of each card in the hand
+        print("Received cards:")
+        for card in self.hand:
+            print(card)  # This will use the __str__ or __repr__ method of Card
 
-    # Notify the UI to update the display
-    # This assumes you have a reference to the ClientUI instance
-    self.ui.update_hand(self.hand)
+        # Notify the UI to update the display
+        # This assumes you have a reference to the ClientUI instance
+        # Make sure the ClientUI has an update_hand method implemented
+        self.ui.update_hand(self.hand)
 
-# More methods can be added for handling specific aspects of the game,
-# like collision detection, player stats updates, and more.
+    # More methods can be added for handling specific aspects of the game,
+    # like collision detection, player stats updates, and more.
