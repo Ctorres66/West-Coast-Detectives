@@ -4,14 +4,13 @@ from shared.game_constants import *
 from shared.game_entities import Board, Room, Card
 
 
+
 class ServerGame:
     def __init__(self):
         self.solution = None
         self.board = Board(5, 5)  # Assuming a 5x5 grid for the game board
         self.players = {}  # Dictionary to keep track of player states
         self.initialize_board()
-        self.deck = []  # This will hold all the cards
-        self.initialize_deck()
 
     def initialize_board(self):
 
@@ -59,6 +58,7 @@ class ServerGame:
                 'hand': [card.to_dict() for card in player_hand]  # Player's hand of cards
             }
             self.send_to_player(player_id, json.dumps(hand_info))  # Serialize and send player info and cards
+
 
     def process_client_action(self, data):
         pass
@@ -150,6 +150,7 @@ class ServerGame:
             # Include other relevant game state data here
         }
         return metadata
+
 
     def update_game_state(self):
         # Update the game state based on player actions

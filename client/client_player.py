@@ -12,7 +12,8 @@ class ClientPlayer:
     def move_to_room(self, room):
         if room.has_secret_passage():
             self.current_location = room.get_diagonal_room()
-            self.make_suggestion()
+            #self.make_suggestion()
+            #keep commented for now, player should be able to choose to make a suggestion or not here
         else:
             self.current_location = room
 

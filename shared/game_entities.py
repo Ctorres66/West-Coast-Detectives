@@ -111,13 +111,18 @@ class Room:
     def __init__(self, name, image_filename=None):
         self.name = name
         self.image_filename = image_filename
-        self.image = None  # Default to None if no image is provided
+        self.image = None
+        self.has_secret_passage = False
+        self.connected_rooms = []  # List of other rooms that are connected to this one, these are specified when
+        # you make a Room object
         if image_filename:
             self.load_image()
 
     def load_image(self):
         # Assuming images are stored in a directory named 'images'
-        image_path = os.path.join('../assets/images', self.image_filename)
+        # NOTE TO CARLOS, CHANGE THIS TO YOUR OWN LOCAL IMAGES FOLDER
+        image_path = os.path.join(r'C:\Users\ctorr\PycharmProjects\West-Coast-Detectives-2\assets\images',
+                                  self.image_filename)
         try:
             self.image = pygame.image.load(image_path)
         except pygame.error as e:

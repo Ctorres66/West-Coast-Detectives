@@ -16,6 +16,7 @@ def main():
     port = 5555  # Assuming this is the port your server is listening on
     # Initialize client components
     network = ClientNetwork(server_ip, port)  # Replace with actual server IP and port
+
     game = ClientGame(network)
     ui = ClientUI(game)
 
