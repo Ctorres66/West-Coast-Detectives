@@ -1,8 +1,7 @@
 # ClientUI only for pygame draw without any data
 import pygame
 
-from shared.game_constants import COLOR_WHITE, COLOR_GRAY, COLOR_YELLOW, SCREEN_WIDTH, SCREEN_HEIGHT, BUTTON_HEIGHT, \
-    BUTTON_MARGIN, BOX_WIDTH, BOX_HEIGHT
+from shared.game_constants import *
 from shared.game_entities import Button
 
 
@@ -37,7 +36,9 @@ class ClientUI:
             if clicked_button:
                 # Handle the button click event
                 print(f"{clicked_button} was clicked")
+                return clicked_button
         # Handle other events like button clicks, mouse hover, etc.
+        return None
 
 
 class BoardPanel:

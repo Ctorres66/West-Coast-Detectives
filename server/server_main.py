@@ -1,4 +1,5 @@
 import socket
+import time
 from _thread import start_new_thread
 
 from server_game import ServerGame
@@ -12,7 +13,7 @@ class Server:
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.game_engine = ServerGame()  # Assuming ServerGame is defined in server_game.py
-        self.clients = {}  # Dictionary to keep track of clients
+        self.clients = {}  # Dictionary to keep track of clients, <player_id, conn>
 
         try:
             self.server_socket.bind((self.host, self.port))
@@ -23,53 +24,104 @@ class Server:
         self.server_socket.listen()
         print(f"Server started on {self.host}:{self.port}. Waiting for connections...")
 
-    def client_thread(self, conn, addr):
-        print(f"Connected to: {addr}")
-
-        # Generate a unique player ID
-        # This can be a combination of address and a unique counter or timestamp
-        player_id = f"{addr[0]}_{addr[1]}"
-
-        # Gather player info. You might want to extend this with more relevant data.
-        player_info = {'address': addr, 'id': player_id}
-
-        # Check if the maximum number of players hasn't been exceeded
-        if len(self.game_engine.players) < 6:  # Assuming a max of 6 players
-            # Add the player to the game
-            self.game_engine.add_player(player_id, player_info)
-            print(f"Player {player_id} added to the game.")
-        else:
-            print("Maximum number of players reached. Connection refused.")
-            conn.close()
-            return
-
-        # Send initial game state or welcome message
-        conn.sendall(str.encode(self.game_engine.board.encode()))
+    def client_thread(self, conn, player_id):
+        print(f"Connected to: {player_id}")
 
         while True:
             try:
                 data = conn.recv(2048).decode()
                 if not data:
+                    print(f"Client {player_id} has disconnected.")
                     break  # Client disconnected
 
-                # Process the data through the game engine and get a response
-                response = self.game_engine.process_client_action(data)
-                conn.sendall(str.encode(response))
+                # Process received data
+                # You'll need to implement this logic based on your game's requirements
+                # response = self.process_client_action(player_id, data)
+                #
+                # # Send response back to the client
+                # if response:
+                #     conn.sendall(str.encode(response))
 
             except Exception as e:
-                print(f"Error with client {addr}: {e}")
-                break
+                print(f"Error with client {player_id}: {e}")
+                break  # Exit the loop in case of an error
 
-        # Remove client from dictionary and close connection
-        print(f"Connection closed with {addr}")
-        del self.clients[addr]
+        self.cleanup_client_connection(player_id, conn)
+
+    def cleanup_client_connection(self, player_id, conn):
+        """
+        Clean up after a client has disconnected.
+
+        :param player_id: The ID of the player who has disconnected.
+        :param conn: The socket connection associated with the player.
+        """
+        # Close the connection
         conn.close()
 
+        # Remove the player from the active clients list
+        if player_id in self.clients:
+            del self.clients[player_id]
+
+        # Optionally, perform additional cleanup related to game state
+        # For instance, if the game needs to be aware of player disconnections,
+        # update the game state accordingly.
+        self.game_engine.remove_player(player_id)
+
+        # Log or print the disconnection
+        print(f"Player {player_id} has disconnected and cleanup is complete.")
+
+    # def process_client_action(self, action, player_id, conn):
+    #     if action['type'] == 'start_game':
+    #         self.game_engine.start_game(conn)
+    #     elif action['type'] == 'add_player':
+    #         self.game_engine.add_player(player_id, conn)
+
+    # Handle other action types...
+
     def run(self):
-        while True:
-            conn, addr = self.server_socket.accept()
-            self.clients[addr] = conn
-            start_new_thread(self.client_thread, (conn, addr))
+        try:
+            while True:
+                conn, addr = self.server_socket.accept()
+                player_id = f"{addr[0]}_{addr[1]}"
+
+                if len(self.game_engine.players) < 6:  # Assuming a max of 6 players
+                    self.game_engine.add_player(player_id, conn)
+                    print(f"Player {player_id} added to the game.")
+                else:
+                    print("Maximum number of players reached. Connection refused.")
+                    conn.close()
+                    continue  # Skip to the next iteration of the loop
+
+                self.clients[player_id] = conn
+                start_new_thread(self.client_thread, (conn, player_id))
+
+                if self.game_engine.game_started:  # and someone need to press button to start game
+                    time.sleep(5)
+                    self.game_engine.start_game(self.clients)
+
+        except KeyboardInterrupt:
+            print("Server shutdown requested by user. Cleaning up...")
+
+            # Perform any necessary cleanup here
+            self.cleanup()
+
+            print("Server shut down successfully.")
+
+    def cleanup(self):
+        """
+        Clean up the server resources before shutting down.
+        """
+
+        # Close all client connections
+        for player_id, conn in self.clients.items():
+            conn.close()
+            print(f"Connection with player {player_id} closed.")
+
+        # Close the server socket
+        self.server_socket.close()
+        print("Server socket closed.")
+
+        # Optionally, perform additional cleanup tasks
 
 
 if __name__ == "__main__":
