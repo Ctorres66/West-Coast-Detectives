@@ -33,22 +33,25 @@ BOX_HEIGHT = 300
 
 ROOM_WIDTH = 100
 ROOM_HEIGHT = 100
+
 CARD_WIDTH = 100
 CARD_HEIGHT = 200
+PADDING = 10
+TEXT_HEIGHT = 20  # Height for each text line
 
 # constants for suspect names
 SUSPECT = 'Suspect'
 
-MUSTARD = 'Colonel Mustard'
 SCARLET = 'Miss Scarlet'
+MUSTARD = 'Colonel Mustard'
 PLUM = 'Professor Plum'
 GREEN = 'Mr Green'
 WHITE = 'Mrs White'
 PEACOCK = 'Mrs Peacock'
 
 SUSPECTS = [
-    MUSTARD,
     SCARLET,
+    MUSTARD,
     PLUM,
     GREEN,
     WHITE,
@@ -57,8 +60,8 @@ SUSPECTS = [
 
 # Dictionary mapping each suspect to their starting position
 STARTING_POSITIONS = {
-    MUSTARD: (0, 0),  # Replace with actual coordinates or room identifiers
-    SCARLET: (1, 0),
+    SCARLET: (0, 0),  # Replace with actual coordinates or room identifiers
+    MUSTARD: (1, 0),
     PLUM: (2, 0),
     GREEN: (3, 0),
     WHITE: (4, 0),
@@ -108,6 +111,18 @@ ROOMS = [
     LOUNGE,
     DINING_ROOM
 ]
+
+ROOM_COORDS = {
+    KITCHEN: (4, 4),
+    BALLROOM: (4, 2),
+    CONSERVATORY: (4, 0),
+    BILLIARD_ROOM: (2, 2),
+    LIBRARY: (2, 0),
+    STUDY: (0, 0),
+    HALL: (0, 2),
+    LOUNGE: (0, 4),
+    DINING_ROOM: (2, 4),
+}
 
 # constants for hallways
 STUDY_LIBRARY = 'study-library hallway'

@@ -28,25 +28,9 @@ class Board:
             self.cols = cols if cols is not None else 0
             self.grid = [[None for _ in range(self.cols)] for _ in range(self.rows)]
 
-        self.room_coords = {
-            KITCHEN: (4, 4),
-            BALLROOM: (4, 2),
-            CONSERVATORY: (4, 0),
-            BILLIARD_ROOM: (2, 2),
-            LIBRARY: (2, 0),
-            STUDY: (0, 0),
-            HALL: (0, 2),
-            LOUNGE: (0, 4),
-            DINING_ROOM: (2, 4),
-        }
-
     def add_room(self, room, x, y):
         if 0 <= x < self.rows and 0 <= y < self.cols:
             self.grid[x][y] = room
-
-    def get_coords_for_room(self, room_name):
-        # This method uses the predefined mapping to return the coordinates for a given room name
-        return self.room_coords.get(room_name)
 
     # Function to encode the current Board state to Json format
     def encode(self):
@@ -121,8 +105,7 @@ class Room:
     def load_image(self):
         # Assuming images are stored in a directory named 'images'
         # NOTE TO CARLOS, CHANGE THIS TO YOUR OWN LOCAL IMAGES FOLDER
-        image_path = os.path.join(r'C:\Users\ctorr\PycharmProjects\West-Coast-Detectives-2\assets\images',
-                                  self.image_filename)
+        image_path = os.path.join('../assets/images', self.image_filename)
         try:
             self.image = pygame.image.load(image_path)
         except pygame.error as e:
@@ -248,13 +231,91 @@ class Card:
             self.image = None  # Set to None if there's an error loading
 
     def draw(self, surface, position):
-        if self.image:
-            # Draw the card image at the given position
-            surface.blit(self.image, position)
+
+        # Create a rectangle for the card
+        card_rect = pygame.Rect(position, (CARD_WIDTH, CARD_HEIGHT))
+
+        # Draw the rectangle
+        pygame.draw.rect(surface, pygame.Color('white'), card_rect)
+
+        # Position for the text inside the rectangle
+        text_position = (position[0] + PADDING, position[1] + PADDING)
+
+        # Draw the card type and name
+        self.draw_text(surface, self.card_type, text_position)
+        self.draw_text(surface, self.name, (text_position[0], text_position[1] + TEXT_HEIGHT))
+
+        # Check if there is an image filename and draw the image
+        if self.image_filename:
+            self.draw_image(surface, position)
+
+    def draw_text(self, surface, text, position):
+        font = pygame.font.Font(None, 24)
+        rendered_text = font.render(text, True, pygame.Color('black'))
+        surface.blit(rendered_text, position)
+
+    def draw_image(self, surface, position):
+        try:
+            image = pygame.image.load(self.image_filename)
+            image_rect = image.get_rect(center=(position[0] + 50, position[1] + 75))  # Adjust position as needed
+            surface.blit(image, image_rect)
+        except pygame.error:
+            pass  # Optionally handle the error here
+
+
+class Player:
+    def __init__(self, player_id, character, current_location, cards):
+        self.player_id = player_id
+        self.character = character
+        self.current_location = current_location
+        self.cards = cards
+
+    def update_position(self, new_location):
+        if new_location != self.current_location:
+            self.current_location = new_location
+            return self.encode()  # Return the encoded data only if the position changes
+        return None  # Return None if the position hasn't changed
+
+    def to_dict(self):
+        return {
+            'player_id': self.player_id,
+            'character': self.character,
+            'current_location': self.current_location,
+            'cards': [card.to_dict() for card in self.cards]
+        }
+
+    def move_to_hallway(self, hallway):
+        if hallway.is_occupied():
+            raise ValueError("The hallway is blocked.")
+        self.current_location = hallway
+
+    # game logic for each player
+    def move_to_room(self, room):
+        if room.has_secret_passage():
+            self.current_location = room.get_diagonal_room()
+            # self.make_suggestion()
+            # keep commented for now, player should be able to choose to make a suggestion or not here
         else:
-            # Draw a placeholder or some text if the image is not available
-            # Example: draw card name as text
-            font = pygame.font.Font(None, 24)
-            text = font.render(self.name, True, pygame.Color('white'))
-            text_rect = text.get_rect(center=position)
-            surface.blit(text, text_rect)
+            self.current_location = room
+
+    def make_suggestion(self):
+        # Logic to make a suggestion
+        # This would involve choosing a character and a weapon
+        # And then notifying the game engine to process the suggestion
+        suggestion = {'character': 'Miss Scarlet', 'weapon': 'Candlestick'}
+        self.game.make_suggestion(suggestion)
+
+    def make_accusation(self):
+        # Logic to make an accusation
+        # This would involve choosing a character, weapon, and room
+        # And then notifying the game engine to process the accusation
+        accusation = {'character': 'Colonel Mustard', 'weapon': 'Dagger', 'room': 'Library'}
+        self.game.make_accusation(accusation)
+
+    def stay_or_move(self, moved_by_suggestion):
+        if moved_by_suggestion:
+            # Player decides to stay and make a suggestion
+            self.make_suggestion()
+        else:
+            # Logic for the player to choose to move through a doorway or take a secret passage
+            pass  # Implement UI interaction or other logic to enable the player to choose

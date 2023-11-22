@@ -1,8 +1,9 @@
 class ClientPlayer:
-    def __init__(self, player_id, current_location, game):
+    def __init__(self, player_id):
         self.player_id = player_id
-        self.current_location = current_location  # Could be a Room or Hallway object
-        self.game = game  # A reference to the ClientGame instance
+        self.character = None
+        self.current_location = None  # Could be a Room or Hallway object
+        self.game = None  # A reference to the ClientGame instance
 
     def move_to_hallway(self, hallway):
         if hallway.is_occupied():
@@ -12,8 +13,8 @@ class ClientPlayer:
     def move_to_room(self, room):
         if room.has_secret_passage():
             self.current_location = room.get_diagonal_room()
-            #self.make_suggestion()
-            #keep commented for now, player should be able to choose to make a suggestion or not here
+            # self.make_suggestion()
+            # keep commented for now, player should be able to choose to make a suggestion or not here
         else:
             self.current_location = room
 

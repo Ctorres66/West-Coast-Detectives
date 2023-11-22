@@ -35,3 +35,6 @@ class ClientNetwork:
         except socket.error as e:
             print(f"Receiving error: {e}")
             return None
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return None
