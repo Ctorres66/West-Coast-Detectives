@@ -1,7 +1,7 @@
 import json
 import random
 from shared.game_constants import *
-from shared.game_entities import Board, Room, Card, Player
+from shared.game_entities import Card, Player
 
 
 class ServerGame:
@@ -10,18 +10,14 @@ class ServerGame:
         self.deck = []
         self.initialize_deck()  # shuffle cards to initialize deck
         self.solution = None
-        self.board = Board(5, 5)  # Assuming a 5x5 grid for the game board
-        self.initialize_board()
-        self.encoded_board = self.board.encode()
+        # self.board = None
         self.players = {}  # Dictionary to keep track of player states, <player_id, player info>
         self.players_data = []
 
-    def add_player(self, player_id, conn):
+    def add_player(self, player_id):
         player = Player(player_id, character=None, current_location=None, cards=[])
         self.players[player_id] = player
 
-        conn.sendall(str.encode(self.encoded_board))
-        print(f"send data to client here: {self.encoded_board}")
         if len(self.players) >= 3:  # shall begin
             self.game_started = True
 
@@ -88,25 +84,13 @@ class ServerGame:
                     # Append the card to the player's hand
                     self.players[player_id].cards.append(card)
 
-    def initialize_board(self):
-        # Initialize rooms on the board using the ROOMS constant
-        for room_name in ROOMS:
-            # Use the room name to construct the image filename dynamically
-            image_filename = f"{room_name.replace(' ', '_')}.png"
-            # Get the coordinates for the room from the Board instance
-            coords = ROOM_COORDS[room_name]
-            # Create a Room instance
-            room = Room(room_name, image_filename)
-            # Add the room to the board at the specified coordinates
-            self.board.add_room(room, *coords)
-
     def encode_players(self):
         # Create a dictionary representation of the player
         player_data = {
-            'players': []
+            'players_data': []
         }
         for player in self.players.values():
-            player_data.get('players').append(
+            player_data.get('players_data').append(
                 player.to_dict()
             )
         # Convert the dictionary to a JSON string
@@ -117,6 +101,14 @@ class ServerGame:
         if player_id in self.players:
             del self.players[player_id]
             self.broadcast(f"Player {player_id} has left the game.")
+
+
+
+
+
+
+
+    # moehtod below need revise
 
     def broadcast(self, message):
         # Send a message to all players

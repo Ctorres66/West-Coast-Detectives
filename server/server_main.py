@@ -1,5 +1,4 @@
 import socket
-import time
 from _thread import start_new_thread
 
 from server_game import ServerGame
@@ -82,10 +81,10 @@ class Server:
         try:
             while True:
                 conn, addr = self.server_socket.accept()
-                player_id = f"{addr[0]}_{addr[1]}"
+                player_id = addr
 
                 if len(self.game_engine.players) < 6:  # Assuming a max of 6 players
-                    self.game_engine.add_player(player_id, conn)
+                    self.game_engine.add_player(player_id)
                     print(f"Player {player_id} added to the game.")
                 else:
                     print("Maximum number of players reached. Connection refused.")
@@ -96,7 +95,6 @@ class Server:
                 start_new_thread(self.client_thread, (conn, player_id))
 
                 if self.game_engine.game_started:  # and someone need to press button to start game
-                    time.sleep(5)
                     self.game_engine.start_game(self.clients)
 
         except KeyboardInterrupt:
