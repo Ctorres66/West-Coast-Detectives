@@ -81,7 +81,7 @@ class Server:
         try:
             while True:
                 conn, addr = self.server_socket.accept()
-                player_id = addr
+                player_id = f"{addr[0]}:{addr[1]}"
 
                 if len(self.game_engine.players) < 6:  # Assuming a max of 6 players
                     self.game_engine.add_player(player_id)

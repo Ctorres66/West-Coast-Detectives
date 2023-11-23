@@ -10,7 +10,9 @@ class ClientGame:
         self.players = {}
 
         # local player info
-        self.local_player_id = network.addr
+        self.local_player_id = network.player_id
+        print(f"Local player ID in ClientGame: {self.local_player_id}")  # Debugging print
+
         self.local_character = None
         self.local_location = None
 
@@ -39,10 +41,10 @@ class ClientGame:
             current_location = player_dict.get('current_location')
             cards = player_dict.get('cards', [])
 
-            print(f"player info is: {character} and {current_location}")
+            print(f"player info is: {player_id} and {self.local_player_id}")
             self.ui.update_players(character, current_location)
 
-            if player_id == self.local_player_id:
+            if player_id == self.network.player_id:
                 # Extract player information
                 # local_character = character
                 # local_location = current_location

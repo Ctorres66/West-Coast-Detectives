@@ -1,8 +1,9 @@
 # ClientUI only for pygame draw without any data
 import pygame
+import random
 
 from shared.game_constants import *
-from shared.game_entities import Button, Board
+from shared.game_entities import Button, Board, Card
 
 
 class ClientUI:
@@ -17,7 +18,6 @@ class ClientUI:
         pygame.display.set_caption("Clueless")
         # Load images or fonts here
         # self.background_image = pygame.image.load('path_to_background_image.png')
-        # self.font = pygame.font.SysFont('Arial', 24)
 
         # Initialize the UI components here
         self.board_panel = BoardPanel(
@@ -33,18 +33,23 @@ class ClientUI:
         pygame.display.flip()  # Update the full display Surface to the screen
 
     def update_players(self, character, current_location):
-        print(f"start to draw players info here {character}")
-        square_size = 50
+        print(f"Start to draw player {character} at location {current_location}")
+        square_size = ROOM_SIZE
         font_size = 24
 
-        # Extract x and y from current_location
-        x = current_location[0]
-        y = current_location[1]
-        print(f"x: {x} y: {y}")
+        # Translate board coordinates to screen coordinates
+        x = BOARD_START_X + current_location[0] * square_size
+        y = BOARD_START_Y + current_location[1] * square_size
 
-        # Create and draw the rectangle
-        rect = pygame.Rect(x, y, square_size, square_size)
-        pygame.draw.rect(self.screen, (0, 0, 255), rect)  # Blue square
+        # Define the radius and center of the circle
+        circle_radius = square_size // 4
+        circle_center = (x + square_size // 2, y + square_size // 2)
+
+        # Generate a random color
+        random_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+
+        # Draw a circle with the random color
+        pygame.draw.circle(self.screen, random_color, circle_center, circle_radius)
 
         # Create a font object
         font = pygame.font.SysFont('Arial', font_size)
@@ -52,23 +57,27 @@ class ClientUI:
         # Render the text
         text = font.render(character, True, (255, 255, 255))  # White text
 
-        # Calculate the position to center the text in the square
+        # Calculate the position to center the text in the circle
         text_width, text_height = text.get_size()
-        text_x = x + (square_size - text_width) // 2
-        text_y = y + (square_size - text_height) // 2
+        text_x = circle_center[0] - text_width // 2
+        text_y = circle_center[1] - text_height // 2
 
         # Draw the text
         self.screen.blit(text, (text_x, text_y))
 
     def draw_local_player_cards(self, local_cards):
-        # Define the starting position for the cards
-        start_x = 10  # 10 pixels from the left edge of the screen
-        start_y = 80  # 10 pixels below the notification box
 
+        print(f"local_cards info: {local_cards}")
         # Draw each card in the hand
-        for index, card in enumerate(local_cards):
-            card_x = start_x + (index * (card.width + 10))  # Add space between cards
-            card_y = start_y
+        for index, card_dict in enumerate(local_cards):
+            # Create a Card instance from the dictionary
+            card = Card(card_type=card_dict['card_type'],
+                        name=card_dict['name'],
+                        image_filename=card_dict['image_filename'])
+
+            card_x = CARD_START_X + (index * (CARD_WIDTH + 10))  # Add space between cards
+            card_y = CARD_START_Y
+
             # Assuming the Card class has a draw method
             card.draw(self.screen, (card_x, card_y))
 

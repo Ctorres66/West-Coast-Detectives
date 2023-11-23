@@ -32,24 +32,30 @@ class Board:
         if 0 <= x < self.rows and 0 <= y < self.cols:
             self.grid[x][y] = room
 
-    def draw_rooms(self, surface, start_x, start_y, room_width, room_height):
+    def draw_rooms(self, surface, start_x, start_y, room_size):
         for x, row in enumerate(self.grid):
             for y, room in enumerate(row):
+
                 # Calculate the position for each room
-                rect_x = start_x + x * room_width
-                rect_y = start_y + y * room_height
-                rect = pygame.Rect(rect_x, rect_y, room_width, room_height)
+                rect_x = start_x + x * room_size
+                rect_y = start_y + y * room_size
+                rect = pygame.Rect(rect_x, rect_y, room_size, room_size)
+
+                if (x == 1 and y == 1) or (x == 1 and y == 3) or (x == 3 and y == 1) or (x == 3 and y == 3):
+                    pygame.draw.rect(surface, 'grey', rect)
+                    continue
 
                 # Draw the room if it exists, otherwise draw an empty rectangle
                 if room:
                     room.draw(surface, rect)
                 else:
-                    pygame.draw.rect(surface, DEFAULT_EMPTY_COLOR, rect, 1)
+                    pygame.draw.rect(surface, COLOR_WHITE, rect)
+                    pygame.draw.rect(surface, COLOR_BLACK, rect, 1)
 
-    def draw_board_outline(self, surface, start_x, start_y, room_width, room_height):
+    def draw_board_outline(self, surface, start_x, start_y, room_size):
         # Calculate the total width and height of the board based on rooms
-        board_width = self.cols * room_width
-        board_height = self.rows * room_height
+        board_width = self.cols * room_size
+        board_height = self.rows * room_size
 
         # Create a rectangle representing the board's border
         board_rect = pygame.Rect(start_x, start_y, board_width, board_height)
@@ -59,16 +65,14 @@ class Board:
 
     def draw(self, surface):
         # Define starting position, room width, and height
-        start_x = 300
-        start_y = 100
-        room_width = ROOM_WIDTH  # This should be defined somewhere in your code
-        room_height = ROOM_HEIGHT  # This should be defined somewhere in your code
+
+        room_size = ROOM_SIZE  # This should be defined somewhere in your code
 
         # Draw the rooms on the board
-        self.draw_rooms(surface, start_x, start_y, room_width, room_height)
+        self.draw_rooms(surface, BOARD_START_X, BOARD_START_Y, room_size)
 
         # Draw the board outline
-        self.draw_board_outline(surface, start_x, start_y, room_width, room_height)
+        self.draw_board_outline(surface, BOARD_START_X, BOARD_START_Y, room_size)
 
 
 class Room:
@@ -77,10 +81,32 @@ class Room:
         self.image_filename = image_filename
         self.image = None
         self.has_secret_passage = False
-        self.connected_rooms = []  # List of other rooms that are connected to this one, these are specified when
-        # you make a Room object
         if image_filename:
             self.load_image()
+
+    def draw(self, surface, rect):
+        font_size = 15
+        font = pygame.font.SysFont('Arial', font_size)
+
+        if self.image:
+            # Scale the image to fit the cell and draw it
+            scaled_image = pygame.transform.scale(self.image, (rect.width, rect.height))
+            surface.blit(scaled_image, rect.topleft)
+
+        # Render the room name
+        text = font.render(self.name, True, COLOR_BLACK)  # White text
+        text_width, text_height = text.get_size()
+
+        # Calculate the position to place the text at the bottom of the cell
+        text_x = rect.left + (rect.width - text_width) // 2
+        text_y = rect.bottom - text_height - 5  # 5 pixels above the bottom
+
+        # Draw the text
+        surface.blit(text, (text_x, text_y))
+
+        if not self.image:
+            # Draw a placeholder or leave the cell empty
+            pygame.draw.rect(surface, pygame.Color('red'), rect)  # Example placeholder
 
     def load_image(self):
         # Assuming images are stored in a directory named 'images'
@@ -97,15 +123,6 @@ class Room:
             'name': self.name,
             'image_filename': self.image_filename,
         }
-
-    def draw(self, surface, rect):
-        if self.image:
-            # Scale the image to fit the cell and draw it
-            scaled_image = pygame.transform.scale(self.image, (rect.width, rect.height))
-            surface.blit(scaled_image, rect.topleft)
-        else:
-            # Draw a placeholder or leave the cell empty
-            pygame.draw.rect(surface, pygame.Color('gray'), rect)  # Example placeholder
 
 
 class Button:
