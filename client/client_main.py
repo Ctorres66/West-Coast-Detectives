@@ -15,8 +15,10 @@ def main():
 
     # Initialize client components
     network = ClientNetwork(server_ip, port)  # Replace with actual server IP and port
-    game = ClientGame(network)
-    ui = ClientUI(game)
+    ui = ClientUI()
+    game = ClientGame(network, ui)
+
+    ui.update_initial_ui()
     clock = pygame.time.Clock()  # Create a clock object to manage frame rate
 
     try:
@@ -25,15 +27,15 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                else:
-                    game.handle_input(event)
-                    clicked_button = ui.handle_events(event)
+                # else:
+                #     game.handle_input(event)
+                #     clicked_button = ui.handle_events(event)
+                #
+                #     if clicked_button == "MOVE":
+                #         game.handle_move_action()
 
-                    if clicked_button == "MOVE":
-                        game.handle_move_action()
-
-            game.update()
-            ui.update(game.board)
+            # game logic
+            game.update_data()
             pygame.display.flip()
             clock.tick(60)
 

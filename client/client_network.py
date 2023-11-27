@@ -8,11 +8,15 @@ class ClientNetwork:
         self.port = port
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.addr = (self.server_ip, self.port)
+        self.player_id = None
         self.connect()
 
     def connect(self):
         try:
             self.client.connect(self.addr)
+            local_ip, local_port = self.client.getsockname()
+            self.player_id = f"{local_ip}:{local_port}"
+            print(f"player_id: {self.player_id}")
         except socket.error as e:
             print(f"Connection error: {e}")
 

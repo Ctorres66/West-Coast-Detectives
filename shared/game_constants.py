@@ -31,23 +31,29 @@ BUTTON_MARGIN = 50
 BOX_WIDTH = 380
 BOX_HEIGHT = 300
 
-ROOM_WIDTH = 100
-ROOM_HEIGHT = 100
+BOARD_START_X = 300
+BOARD_START_Y = 100
+
+ROOM_SIZE = 100
 
 CARD_WIDTH = 100
 CARD_HEIGHT = 200
+
+CARD_START_X = 850
+CARD_START_Y = 450
+
 PADDING = 10
 TEXT_HEIGHT = 20  # Height for each text line
 
 # constants for suspect names
 SUSPECT = 'Suspect'
 
-SCARLET = 'Miss Scarlet'
-MUSTARD = 'Colonel Mustard'
-PLUM = 'Professor Plum'
-GREEN = 'Mr Green'
-WHITE = 'Mrs White'
-PEACOCK = 'Mrs Peacock'
+SCARLET = 'SC'
+MUSTARD = 'CM'
+PLUM = 'PL'
+GREEN = 'GR'
+WHITE = 'WH'
+PEACOCK = 'PE'
 
 SUSPECTS = [
     SCARLET,
@@ -60,12 +66,12 @@ SUSPECTS = [
 
 # Dictionary mapping each suspect to their starting position
 STARTING_POSITIONS = {
-    SCARLET: (0, 0),  # Replace with actual coordinates or room identifiers
-    MUSTARD: (1, 0),
-    PLUM: (2, 0),
-    GREEN: (3, 0),
-    WHITE: (4, 0),
-    PEACOCK: (0, 1),
+    SCARLET: (0, 2),  # Replace with actual coordinates or room identifiers
+    MUSTARD: (0, 4),
+    PLUM: (0, 0),
+    GREEN: (4, 0),
+    WHITE: (4, 4),
+    PEACOCK: (4, 2),
     # Add other characters if needed
 }
 

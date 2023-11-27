@@ -10,66 +10,52 @@ DEFAULT_EMPTY_COLOR = pygame.Color('lightslategrey')
 
 
 class Board:
-    def __init__(self, rows=None, cols=None, dict_data=None):
-        if dict_data is not None:
-            metadata = dict_data.get('metadata')
-            self.rows = metadata.get('num_rows')
-            self.cols = metadata.get('num_cols')
-            self.grid = [[None for _ in range(self.cols)] for _ in range(self.rows)]
-            for room_dict in dict_data.get('rooms'):
-                room = room_dict.get('room')
-                # Corrected index order: first 'y' (row), then 'x' (column)
-                x = room_dict.get('x')  # Column
-                y = room_dict.get('y')  # Row
-                if y is not None and x is not None:
-                    self.grid[y][x] = Room(room.get('name'), room.get('image_filename'))
-        else:
-            self.rows = rows if rows is not None else 0
-            self.cols = cols if cols is not None else 0
-            self.grid = [[None for _ in range(self.cols)] for _ in range(self.rows)]
+    def __init__(self):
+        self.rows = 5
+        self.cols = 5
+        self.grid = [[None for _ in range(self.cols)] for _ in range(self.rows)]
+        self.initialize_board()
+
+    def initialize_board(self):
+        # Initialize rooms on the board using the ROOMS constant
+        for room_name in ROOMS:
+            # Use the room name to construct the image filename dynamically
+            image_filename = f"{room_name.replace(' ', '_')}.png"
+            # Get the coordinates for the room from the Board instance
+            coords = ROOM_COORDS[room_name]
+            # Create a Room instance
+            room = Room(room_name, image_filename)
+            # Add the room to the board at the specified coordinates
+            self.add_room(room, *coords)
 
     def add_room(self, room, x, y):
         if 0 <= x < self.rows and 0 <= y < self.cols:
             self.grid[x][y] = room
 
-    # Function to encode the current Board state to Json format
-    def encode(self):
-        board_data = {
-            'metadata': {
-                'num_rows': self.rows,
-                'num_cols': self.cols,
-            },
-            'rooms': []
-        }
+    def draw_rooms(self, surface, start_x, start_y, room_size):
         for x, row in enumerate(self.grid):
             for y, room in enumerate(row):
-                if room is None:
-                    continue
-                board_data.get('rooms').append({
-                    'x': x,
-                    'y': y,
-                    'room': room.to_dict(),
-                })
-        return json.dumps(board_data, indent=4)
 
-    def draw_rooms(self, surface, start_x, start_y, room_width, room_height):
-        for x, row in enumerate(self.grid):
-            for y, room in enumerate(row):
                 # Calculate the position for each room
-                rect_x = start_x + x * room_width
-                rect_y = start_y + y * room_height
-                rect = pygame.Rect(rect_x, rect_y, room_width, room_height)
+                rect_x = start_x + x * room_size
+                rect_y = start_y + y * room_size
+                rect = pygame.Rect(rect_x, rect_y, room_size, room_size)
+
+                if (x == 1 and y == 1) or (x == 1 and y == 3) or (x == 3 and y == 1) or (x == 3 and y == 3):
+                    pygame.draw.rect(surface, 'grey', rect)
+                    continue
 
                 # Draw the room if it exists, otherwise draw an empty rectangle
                 if room:
                     room.draw(surface, rect)
                 else:
-                    pygame.draw.rect(surface, DEFAULT_EMPTY_COLOR, rect, 1)
+                    pygame.draw.rect(surface, COLOR_WHITE, rect)
+                    pygame.draw.rect(surface, COLOR_BLACK, rect, 1)
 
-    def draw_board_outline(self, surface, start_x, start_y, room_width, room_height):
+    def draw_board_outline(self, surface, start_x, start_y, room_size):
         # Calculate the total width and height of the board based on rooms
-        board_width = self.cols * room_width
-        board_height = self.rows * room_height
+        board_width = self.cols * room_size
+        board_height = self.rows * room_size
 
         # Create a rectangle representing the board's border
         board_rect = pygame.Rect(start_x, start_y, board_width, board_height)
@@ -79,16 +65,14 @@ class Board:
 
     def draw(self, surface):
         # Define starting position, room width, and height
-        start_x = 300
-        start_y = 100
-        room_width = ROOM_WIDTH  # This should be defined somewhere in your code
-        room_height = ROOM_HEIGHT  # This should be defined somewhere in your code
+
+        room_size = ROOM_SIZE  # This should be defined somewhere in your code
 
         # Draw the rooms on the board
-        self.draw_rooms(surface, start_x, start_y, room_width, room_height)
+        self.draw_rooms(surface, BOARD_START_X, BOARD_START_Y, room_size)
 
         # Draw the board outline
-        self.draw_board_outline(surface, start_x, start_y, room_width, room_height)
+        self.draw_board_outline(surface, BOARD_START_X, BOARD_START_Y, room_size)
 
 
 class Room:
@@ -97,10 +81,32 @@ class Room:
         self.image_filename = image_filename
         self.image = None
         self.has_secret_passage = False
-        self.connected_rooms = []  # List of other rooms that are connected to this one, these are specified when
-        # you make a Room object
         if image_filename:
             self.load_image()
+
+    def draw(self, surface, rect):
+        font_size = 15
+        font = pygame.font.SysFont('Arial', font_size)
+
+        if self.image:
+            # Scale the image to fit the cell and draw it
+            scaled_image = pygame.transform.scale(self.image, (rect.width, rect.height))
+            surface.blit(scaled_image, rect.topleft)
+
+        # Render the room name
+        text = font.render(self.name, True, COLOR_BLACK)  # White text
+        text_width, text_height = text.get_size()
+
+        # Calculate the position to place the text at the bottom of the cell
+        text_x = rect.left + (rect.width - text_width) // 2
+        text_y = rect.bottom - text_height - 5  # 5 pixels above the bottom
+
+        # Draw the text
+        surface.blit(text, (text_x, text_y))
+
+        if not self.image:
+            # Draw a placeholder or leave the cell empty
+            pygame.draw.rect(surface, pygame.Color('red'), rect)  # Example placeholder
 
     def load_image(self):
         # Assuming images are stored in a directory named 'images'
@@ -117,15 +123,6 @@ class Room:
             'name': self.name,
             'image_filename': self.image_filename,
         }
-
-    def draw(self, surface, rect):
-        if self.image:
-            # Scale the image to fit the cell and draw it
-            scaled_image = pygame.transform.scale(self.image, (rect.width, rect.height))
-            surface.blit(scaled_image, rect.topleft)
-        else:
-            # Draw a placeholder or leave the cell empty
-            pygame.draw.rect(surface, pygame.Color('gray'), rect)  # Example placeholder
 
 
 class Button:
@@ -222,6 +219,10 @@ class Card:
         return cls.from_dict(data)
 
     def load_image(self):
+        # Load the image only once
+        if self.image is not None:
+            return  # Image already loaded
+
         # Assuming images are stored in a directory named 'images' under 'assets'
         image_path = os.path.join('../assets/images', self.image_filename)
         try:
@@ -249,18 +250,19 @@ class Card:
         if self.image_filename:
             self.draw_image(surface, position)
 
+        if self.image:
+            self.draw_image(surface, position)
+
     def draw_text(self, surface, text, position):
         font = pygame.font.Font(None, 24)
         rendered_text = font.render(text, True, pygame.Color('black'))
         surface.blit(rendered_text, position)
 
     def draw_image(self, surface, position):
-        try:
-            image = pygame.image.load(self.image_filename)
-            image_rect = image.get_rect(center=(position[0] + 50, position[1] + 75))  # Adjust position as needed
-            surface.blit(image, image_rect)
-        except pygame.error:
-            pass  # Optionally handle the error here
+        # Use the pre-loaded image
+        if self.image:
+            image_rect = self.image.get_rect(center=(position[0] + 50, position[1] + 75))
+            surface.blit(self.image, image_rect)
 
 
 class Player:
@@ -270,11 +272,11 @@ class Player:
         self.current_location = current_location
         self.cards = cards
 
-    def update_position(self, new_location):
-        if new_location != self.current_location:
-            self.current_location = new_location
-            return self.encode()  # Return the encoded data only if the position changes
-        return None  # Return None if the position hasn't changed
+    # def update_position(self, new_location):
+    #     if new_location != self.current_location:
+    #         self.current_location = new_location
+    #         return self.encode()  # Return the encoded data only if the position changes
+    #     return None  # Return None if the position hasn't changed
 
     def to_dict(self):
         return {
