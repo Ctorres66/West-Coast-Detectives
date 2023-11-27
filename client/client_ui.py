@@ -115,7 +115,7 @@ class ButtonPanel:
     def __init__(self, x, y):
         self.buttons = []
         colors = [(239, 244, 248), (192, 211, 228), (243, 219, 233), (149, 155, 189)]
-        texts = ["MOVE", "SUGGESTION", "ACCUSATION", "END TURN"]
+        texts = ["MOVE", "SUGGESTION", "ACCUSATION", "START GAME"]
 
         for i, (color, text) in enumerate(zip(colors, texts)):
             # Calculate the y position for each button

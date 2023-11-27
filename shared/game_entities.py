@@ -266,11 +266,11 @@ class Card:
 
 
 class Player:
-    def __init__(self, player_id, character, current_location, cards):
+    def __init__(self, player_id, character, current_location):
         self.player_id = player_id
         self.character = character
         self.current_location = current_location
-        self.cards = cards
+        self.cards = []
 
     # def update_position(self, new_location):
     #     if new_location != self.current_location:

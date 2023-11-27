@@ -29,6 +29,8 @@ class ClientGame:
                 print("server data is: {}".format(server_data))
 
                 if 'players_data' in parsed_data:
+                    print("Game is starting, disabling button.")
+                    # self.disable_start_game_button()
                     self.update_players(parsed_data)
 
             except json.JSONDecodeError as e:
@@ -51,6 +53,19 @@ class ClientGame:
                 local_cards = cards
 
                 self.ui.draw_local_player_cards(local_cards)
+
+    def handle_start_game(self):
+        self.network.send("START_GAME")
+
+    def handle_move_action(self):
+        pass
+
+
+
+
+
+
+
 
     def update_local_state(self):
         """
@@ -101,3 +116,5 @@ class ClientGame:
         # This assumes you have a reference to the ClientUI instance
         # Make sure the ClientUI has an update_hand method implemented
         self.ui.update_hand(self.hand)
+
+

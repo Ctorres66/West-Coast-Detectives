@@ -5,23 +5,26 @@ from shared.game_entities import Card, Player
 
 
 class ServerGame:
-    def __init__(self):
-        self.game_started = False
+    def __init__(self, clients):
         self.deck = []
         self.initialize_deck()  # shuffle cards to initialize deck
         self.solution = None
-        # self.board = None
+        self.clients = clients  # Dictionary, <player_id, conn>
         self.players = {}  # Dictionary to keep track of player states, <player_id, player info>
-        self.players_data = []
+
+    def broadcast(self, message):
+        for client in self.clients.values():
+            try:
+                client.sendall(message.encode())
+            except Exception as e:
+                print(f"Error broadcasting to client: {e}")
+                # Handle disconnected client here
 
     def add_player(self, player_id):
-        player = Player(player_id, character=None, current_location=None, cards=[])
+        player = Player(player_id, character=None, current_location=None)
         self.players[player_id] = player
 
-        if len(self.players) >= 3:  # shall begin
-            self.game_started = True
-
-    def start_game(self, clients):
+    def start_game(self, clients, initiating_player_id):
         # Shuffle and assign characters and starting positions to players
         self.assign_characters_and_positions()
 
@@ -30,8 +33,19 @@ class ServerGame:
         self.deal_cards()
 
         encoded_player_data = self.encode_players()
+
+        try:
+            clients[initiating_player_id].sendall(str.encode("GAME START"))
+            clients[initiating_player_id].sendall(str.encode(encoded_player_data))
+        except Exception as e:
+            print(f"Error sending start game data to initiating player {initiating_player_id}: {e}")
+
         for player_id in clients:
-            clients[player_id].sendall(str.encode(encoded_player_data))
+            if player_id != initiating_player_id:
+                try:
+                    clients[player_id].sendall(str.encode(encoded_player_data))
+                except Exception as e:
+                    print(f"Error sending start game data to player {player_id}: {e}")
 
     def assign_characters_and_positions(self):
         player_ids = list(self.players.keys())
@@ -70,6 +84,7 @@ class ServerGame:
         print(f"Solution prepared: {self.solution}")
 
     def deal_cards(self):
+        print(f"start shuffle")
         # Shuffle the deck
         random.shuffle(self.deck)
 
@@ -77,12 +92,17 @@ class ServerGame:
         player_ids = list(self.players.keys())
         while len(self.deck) > 0:
             for player_id in player_ids:
-                if len(self.deck) > 0:
-                    # Take the top card from the deck
-                    card = self.deck.pop(0)
+                print(f"player id: {player_id}")
+                if len(self.deck) == 0:
+                    # Break the loop if there are no more cards to deal
+                    break
 
-                    # Append the card to the player's hand
-                    self.players[player_id].cards.append(card)
+                # Take the top card from the deck
+                card = self.deck.pop(0)
+
+                # Append the card to the player's hand
+                self.players[player_id].cards.append(card)
+        print(f"shuffle")
 
     def encode_players(self):
         # Create a dictionary representation of the player
@@ -102,17 +122,7 @@ class ServerGame:
             del self.players[player_id]
             self.broadcast(f"Player {player_id} has left the game.")
 
-
-
-
-
-
-
     # moehtod below need revise
-
-    def broadcast(self, message):
-        # Send a message to all players
-        pass
 
     def update_game_state(self):
         # Update the game state based on player actions

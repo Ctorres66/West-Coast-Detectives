@@ -1,7 +1,7 @@
-
+SERVER_IP = 'Royas-MacBook-Air.local'
 PORT = 5555
 
-MAX_PLAYERS = 6
+MIN_PLAYERS_REQUIRED = 2
 
 ROWS, COLS = 5, 5
 SQUARE_SIZE = 100

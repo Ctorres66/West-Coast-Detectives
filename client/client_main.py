@@ -2,6 +2,7 @@ import pygame
 from client_game import ClientGame
 from client_network import ClientNetwork
 from client_ui import ClientUI
+from shared.game_constants import PORT, SERVER_IP
 
 
 def main():
@@ -9,12 +10,8 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))  # Set the desired window size
     pygame.display.set_caption("Game Title")  # Set your window title
-
-    server_ip = 'Royas-MacBook-Air.local'  # Replace with the actual server IP
-    port = 5555  # Assuming this is the port your server is listening on
-
     # Initialize client components
-    network = ClientNetwork(server_ip, port)  # Replace with actual server IP and port
+    network = ClientNetwork(SERVER_IP, PORT)  # Replace with actual server IP and port
     ui = ClientUI()
     game = ClientGame(network, ui)
 
@@ -27,12 +24,28 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                # else:
-                #     game.handle_input(event)
-                #     clicked_button = ui.handle_events(event)
+                # elif event.type == pygame.MOUSEBUTTONDOWN:
+                #     # Check if the Start Game button is clicked
+                #     if ui.start_button.is_clicked(event.pos):
+                #         game.start_game()
                 #
-                #     if clicked_button == "MOVE":
-                #         game.handle_move_action()
+                #     # Check if the Move button is clicked
+                #     elif ui.move_button.is_clicked(event.pos):
+                #         game.move_player()
+
+                # if start_button.collidepoint(event.pos):
+                #     # Send a 'start game' signal to the server
+                #     # Assuming you have a socket connection 's' already established
+                #     s.sendall("START_GAME".encode())
+
+                else:
+                    game.handle_input(event)
+                    clicked_button = ui.handle_events(event)
+
+                    if clicked_button == "START GAME":
+                        game.handle_start_game()
+                    elif clicked_button == "MOVE":
+                        game.handle_move_action()
 
             # game logic
             game.update_data()
