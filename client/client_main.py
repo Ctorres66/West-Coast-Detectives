@@ -46,6 +46,12 @@ def main():
                         game.handle_start_game()
                     elif clicked_button == "MOVE":
                         game.handle_move_action()
+                    elif clicked_button == "SUGGESTION":
+                        ui.draw_suggestion_ui()
+                        game.handle_suggestion_action()
+                    elif clicked_button == "ACCUSATION":
+                        ui.draw_accusation_ui()
+                        game.handle_accusation_action()
 
             # game logic
             game.update_data()

@@ -60,6 +60,11 @@ class ClientGame:
     def handle_move_action(self):
         pass
 
+    def handle_suggestion_action(self):
+        pass
+
+    def handle_accusation_action(self):
+        pass
 
 
 

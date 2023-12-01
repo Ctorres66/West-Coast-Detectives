@@ -16,8 +16,6 @@ class ClientUI:
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
 
         pygame.display.set_caption("Clueless")
-        # Load images or fonts here
-        # self.background_image = pygame.image.load('path_to_background_image.png')
 
         # Initialize the UI components here
         self.board_panel = BoardPanel(
@@ -25,6 +23,125 @@ class ClientUI:
             button_panel=ButtonPanel(x=50, y=10),
             notification_box=NotificationBox(x=850, y=100),
         )
+        # Add text input components
+        self.suggestion_button = pygame.Rect(200, 400, 200, 50)
+        # Initialize font
+        self.font = pygame.font.Font(None, 32)  # You can replace 'None' with a specific font file if needed
+        # Add text input components
+        self.suggestion_button = pygame.Rect(200, 400, 200, 50)
+        self.suggestion_input_boxes = [
+            pygame.Rect(200, 100, 200, 32),
+            pygame.Rect(200, 150, 200, 32),
+            pygame.Rect(200, 200, 200, 32),
+        ]
+        self.suggestion_text = ['Enter character', 'Enter weapon', 'Enter room']
+        self.suggestion_texts = ['', '', '']
+        self.send_suggestion_button = pygame.Rect(250, 250, 100, 40)
+
+        # New state variable to track if suggestion is sent
+        self.suggestion_sent = False
+
+        self.accusation_button = pygame.Rect(200, 400, 200, 50)
+        self.accusation_input_boxes = [
+            pygame.Rect(200, 450, 200, 32),  # Adjusted Y-coordinate
+            pygame.Rect(200, 500, 200, 32),  # Adjusted Y-coordinate
+            pygame.Rect(200, 550, 200, 32),  # Adjusted Y-coordinate
+        ]
+        self.accusation_text = ['Accuse character', 'Accuse weapon', 'Accuse room']
+        self.accusation_texts = ['', '', '']
+        self.send_accusation_button = pygame.Rect(250, 600, 100, 40)  # Adjusted Y-coordinate
+        self.accusation_sent = False
+
+    def draw_suggestion_ui(self):
+        # Draw suggestion UI components only if suggestion is not sent
+        if not self.suggestion_sent:
+            pygame.draw.rect(self.screen, (0, 255, 0), self.send_suggestion_button)
+
+            for i, box in enumerate(self.suggestion_input_boxes):
+                pygame.draw.rect(self.screen, (0, 0, 255), box, 2)
+                self.draw_text(self.suggestion_texts[i], (0, 0, 0), box)  # Use black color for text
+
+            # Draw text on button
+            self.draw_text('SEND', (255, 255, 255), self.send_suggestion_button)
+
+    def handle_suggestion_events(self, event):
+        # Handle events for the suggestion UI
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.suggestion_button.collidepoint(event.pos):
+                self.draw_suggestion_ui()
+            elif self.send_suggestion_button.collidepoint(event.pos):
+                # Send the suggestion tuple to the server
+                suggestion_tuple = tuple(self.suggestion_texts)
+                # Assuming you have a method in the ClientGame class to handle sending suggestions
+                self.game.handle_send_suggestion(suggestion_tuple)
+                # Set the suggestion_sent flag to True to hide the UI components
+                self.suggestion_sent = True
+
+        elif event.type == pygame.KEYDOWN:
+            for i, box in enumerate(self.suggestion_input_boxes):
+                if box.collidepoint(event.pos) and not self.suggestion_sent:
+                    if event.key == pygame.K_RETURN:
+                        # Move to the next input box or send suggestion on Enter
+                        self.suggestion_texts[i] = self.suggestion_text[i]
+                        if i < 2:
+                            self.suggestion_texts[i + 1] = self.suggestion_text[i + 1]
+                    elif event.key == pygame.K_BACKSPACE:
+                        # Allow backspace to delete characters
+                        self.suggestion_texts[i] = self.suggestion_texts[i][:-1]
+                    else:
+                        # Append typed characters to the current input box
+                        self.suggestion_texts[i] += event.unicode
+
+    def draw_accusation_ui(self):
+        # Draw accusation UI components only if accusation is not sent
+        if not self.accusation_sent:
+            pygame.draw.rect(self.screen, (0, 255, 0), self.send_accusation_button)
+
+            for i, box in enumerate(self.accusation_input_boxes):
+                pygame.draw.rect(self.screen, (0, 0, 255), box, 2)
+                self.draw_text(self.accusation_texts[i], (0, 0, 0), box)  # Use black color for text
+
+            # Draw text on buttons
+            self.draw_text('SEND', (255, 255, 255), self.send_accusation_button)
+
+    def handle_accusation_events(self, event):
+        # Handle events for the accusation UI
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.accusation_button.collidepoint(event.pos):
+                self.draw_accusation_ui()
+            elif self.send_accusation_button.collidepoint(event.pos):
+                # Send the accusation tuple to the server
+                accusation_tuple = tuple(self.accusation_texts)
+                # Assuming you have a method in the ClientGame class to handle sending accusations
+                self.game.handle_send_accusation(accusation_tuple)
+                # Set the accusation_sent flag to True to hide the UI components
+                self.accusation_sent = True
+
+        elif event.type == pygame.KEYDOWN:
+            for i, box in enumerate(self.accusation_input_boxes):
+                if box.collidepoint(event.pos) and not self.accusation_sent:
+                    if event.key == pygame.K_RETURN:
+                        # Move to the next input box or send accusation on Enter
+                        self.accusation_texts[i] = self.accusation_text[i]
+                        if i < 2:
+                            self.accusation_texts[i + 1] = self.accusation_text[i + 1]
+                    elif event.key == pygame.K_BACKSPACE:
+                        # Allow backspace to delete characters
+                        self.accusation_texts[i] = self.accusation_texts[i][:-1]
+                    else:
+                        # Append typed characters to the current input box
+                        self.accusation_texts[i] += event.unicode
+
+
+
+    def draw_text(self, text, color, rect):
+        # Draw text on the specified rectangle
+        txt_surface = self.font.render(text, True, color)
+        width = max(rect.width, txt_surface.get_width() + 10)
+        rect.w = width
+        self.screen.blit(txt_surface, (rect.x + 5, rect.y + 5))
+        pygame.draw.rect(self.screen, color, rect, 2)
+
 
     def update_initial_ui(self):
         """Update the entire game UI."""
