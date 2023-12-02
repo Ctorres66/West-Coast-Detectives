@@ -66,12 +66,12 @@ SUSPECTS = [
 
 # Dictionary mapping each suspect to their starting position
 STARTING_POSITIONS = {
-    SCARLET: (0, 2),  # Replace with actual coordinates or room identifiers
-    MUSTARD: (0, 4),
-    PLUM: (0, 0),
-    GREEN: (4, 0),
-    WHITE: (4, 4),
-    PEACOCK: (4, 2),
+    SCARLET: (0, 3),  # Replace with actual coordinates or room identifiers
+    MUSTARD: (1, 4),
+    PLUM: (1, 0),
+    GREEN: (4, 1),
+    WHITE: (4, 3),
+    PEACOCK: (3, 0),
     # Add other characters if needed
 }
 
@@ -158,3 +158,12 @@ HALLWAYS = [
     CONSERVATORY_BALLROOM,
     BALLROOM_KITCHEN
 ]
+
+# Constants for dropdown UI
+DROPDOWN_X = 100
+DROPDOWN_Y = 100
+DROPDOWN_WIDTH = 200
+DROPDOWN_HEIGHT = 150
+DROPDOWN_BG_COLOR = (200, 200, 200)
+OPTION_HEIGHT = 30
+TEXT_COLOR = (0, 0, 0)

@@ -47,7 +47,7 @@ class Board:
 
                 # Draw the room if it exists, otherwise draw an empty rectangle
                 if room:
-                    room.draw(surface, rect)
+                    room.room_draw(surface, rect)
                 else:
                     pygame.draw.rect(surface, COLOR_WHITE, rect)
                     pygame.draw.rect(surface, COLOR_BLACK, rect, 1)
@@ -63,16 +63,11 @@ class Board:
         # Draw the board's border on the surface
         pygame.draw.rect(surface, pygame.Color(COLOR_BLACK), board_rect, 2)  # The '2' is the thickness of the border
 
-    def draw(self, surface):
-        # Define starting position, room width, and height
-
+    def board_draw(self, surface):
         room_size = ROOM_SIZE  # This should be defined somewhere in your code
-
-        # Draw the rooms on the board
-        self.draw_rooms(surface, BOARD_START_X, BOARD_START_Y, room_size)
-
-        # Draw the board outline
-        self.draw_board_outline(surface, BOARD_START_X, BOARD_START_Y, room_size)
+        # Draw rooms and board outline
+        self.draw_rooms(surface, 0, 0, room_size)  # Start drawing from (0, 0) of the board surface
+        self.draw_board_outline(surface, 0, 0, room_size)
 
 
 class Room:
@@ -84,7 +79,7 @@ class Room:
         if image_filename:
             self.load_image()
 
-    def draw(self, surface, rect):
+    def room_draw(self, surface, rect):
         font_size = 15
         font = pygame.font.SysFont('Arial', font_size)
 
@@ -92,21 +87,6 @@ class Room:
             # Scale the image to fit the cell and draw it
             scaled_image = pygame.transform.scale(self.image, (rect.width, rect.height))
             surface.blit(scaled_image, rect.topleft)
-
-        # Render the room name
-        text = font.render(self.name, True, COLOR_BLACK)  # White text
-        text_width, text_height = text.get_size()
-
-        # Calculate the position to place the text at the bottom of the cell
-        text_x = rect.left + (rect.width - text_width) // 2
-        text_y = rect.bottom - text_height - 5  # 5 pixels above the bottom
-
-        # Draw the text
-        surface.blit(text, (text_x, text_y))
-
-        if not self.image:
-            # Draw a placeholder or leave the cell empty
-            pygame.draw.rect(surface, pygame.Color('red'), rect)  # Example placeholder
 
     def load_image(self):
         # Assuming images are stored in a directory named 'images'
@@ -266,24 +246,27 @@ class Card:
 
 
 class Player:
-    def __init__(self, player_id, character, current_location):
+    def __init__(self, player_id, character, current_location, turn_number):
         self.player_id = player_id
         self.character = character
         self.current_location = current_location
         self.cards = []
-
-    # def update_position(self, new_location):
-    #     if new_location != self.current_location:
-    #         self.current_location = new_location
-    #         return self.encode()  # Return the encoded data only if the position changes
-    #     return None  # Return None if the position hasn't changed
+        self.turn_number = turn_number
 
     def to_dict(self):
         return {
             'player_id': self.player_id,
             'character': self.character,
             'current_location': self.current_location,
-            'cards': [card.to_dict() for card in self.cards]
+            'cards': [card.to_dict() for card in self.cards],
+            'turn_number': self.turn_number
+        }
+
+    def to_dict_move(self):
+        return {
+            'player_id': self.player_id,
+            'character': self.character,
+            'current_location': self.current_location
         }
 
     def move_to_hallway(self, hallway):
@@ -299,25 +282,3 @@ class Player:
             # keep commented for now, player should be able to choose to make a suggestion or not here
         else:
             self.current_location = room
-
-    def make_suggestion(self):
-        # Logic to make a suggestion
-        # This would involve choosing a character and a weapon
-        # And then notifying the game engine to process the suggestion
-        suggestion = {'character': 'Miss Scarlet', 'weapon': 'Candlestick'}
-        self.game.make_suggestion(suggestion)
-
-    def make_accusation(self):
-        # Logic to make an accusation
-        # This would involve choosing a character, weapon, and room
-        # And then notifying the game engine to process the accusation
-        accusation = {'character': 'Colonel Mustard', 'weapon': 'Dagger', 'room': 'Library'}
-        self.game.make_accusation(accusation)
-
-    def stay_or_move(self, moved_by_suggestion):
-        if moved_by_suggestion:
-            # Player decides to stay and make a suggestion
-            self.make_suggestion()
-        else:
-            # Logic for the player to choose to move through a doorway or take a secret passage
-            pass  # Implement UI interaction or other logic to enable the player to choose

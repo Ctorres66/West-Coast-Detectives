@@ -23,11 +23,10 @@ class ClientNetwork:
     def send(self, data):
         try:
             self.client.send(str.encode(data))
-            return self.client.recv(2048).decode()
         except socket.error as e:
             print(f"Sending error: {e}")
 
-    def receive(self, bufsize=2048):
+    def receive(self, bufsize=4096):
         try:
             ready_to_read, _, _ = select.select([self.client], [], [], 0.5)
             if ready_to_read:
@@ -38,7 +37,6 @@ class ClientNetwork:
                 return None
         except socket.error as e:
             print(f"Receiving error: {e}")
-            return None
         except Exception as e:
             print(f"Unexpected error: {e}")
             return None
