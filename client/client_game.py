@@ -2,9 +2,10 @@ from shared.game_entities import *
 
 
 class ClientGame:
-    def __init__(self, network):
+    def __init__(self, network, ui):
         self.is_selecting_move = None
         self.network = network
+        self.ui = ui
         self.board = None
 
         self.players = {}
@@ -20,7 +21,6 @@ class ClientGame:
     def update_data(self):
         server_data = self.network.receive()
         if server_data:
-            print(f"raw data is: {server_data}")
             try:
                 # Attempt to decode JSON data
                 parsed_data = json.loads(server_data)
@@ -56,8 +56,8 @@ class ClientGame:
 
     def handle_move_action(self):
         if self.current_turn_number == self.local_turn_number:
-            self.get_valid_moves()
-        #     ui need update
+            valid_moves = self.get_valid_moves()
+            self.ui.board_panel.notification_box.add_message(f"valid moves: {valid_moves}")
         else:
             print("It's not your turn.")
 

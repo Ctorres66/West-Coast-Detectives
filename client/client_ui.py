@@ -1,15 +1,14 @@
-# ClientUI only for pygame draw without any data
 import pygame
 from shared.game_constants import *
 from shared.game_entities import Button, Board, Card
 
 
 class ClientUI:
-    def __init__(self, screen, game):
+    def __init__(self, screen):
         self.screen = screen
         # initial board
         self.board = Board()
-        self.game = game  # This is an instance of the ClientGame class
+        self.game = None  # This is an instance of the ClientGame class
         self.dropdown_rect = None
         self.dropdown_active = False
         self.dropdown_options = []
@@ -21,6 +20,9 @@ class ClientUI:
             notification_box=NotificationBox(x=850, y=100),
         )
 
+    def set_game(self, game):
+        self.game = game
+
     def ui_draw(self, screen):
         # Draw static elements only if the game hasn't started
         if not self.game.game_started:
@@ -28,7 +30,8 @@ class ClientUI:
 
         # Always draw dynamic elements like players
         # Assuming a method to draw players exists
-        self.draw_players()
+        self.draw_players(self.game.local_player_id)
+        self.board_panel.notification_box.draw(screen)
 
     def clear_players_area(self, player):
         """Clear the areas where players were previously drawn."""
@@ -39,14 +42,14 @@ class ClientUI:
         rect = pygame.Rect(rect_x, rect_y, ROOM_SIZE, ROOM_SIZE)
         self.screen.blit(self.board_panel.board_surface, (rect_x, rect_y), rect)
 
-    def draw_players(self):
+    def draw_players(self, local_player_id):
         for player_id, player_data in self.game.players.items():
             character = player_data.get('character')
             current_location = player_data.get('current_location')
             # Draw each player
-            self.draw_player(character, current_location)
+            self.draw_player(character, current_location, player_id, local_player_id)
 
-    def draw_player(self, character, current_location):
+    def draw_player(self, character, current_location, player_id, local_player_id):
         square_size = ROOM_SIZE
         font_size = 24
 
@@ -58,11 +61,12 @@ class ClientUI:
         circle_radius = square_size // 4
         circle_center = (x + square_size // 2, y + square_size // 2)
 
-        # Generate a random color
-        random_color = (0,0,0)
+        player_color = COLOR_BLACK
+        if player_id == local_player_id:
+            player_color = COLOR_PURPLE
 
         # Draw a circle with the random color
-        pygame.draw.circle(self.screen, random_color, circle_center, circle_radius)
+        pygame.draw.circle(self.screen, player_color, circle_center, circle_radius)
 
         # Create a font object
         font = pygame.font.SysFont('Arial', font_size)
@@ -130,8 +134,6 @@ class ClientUI:
         self.dropdown_active = False
         self.dropdown_options = []
 
-
-
     def draw_dropdown(self, screen):
         # Initialize font for dropdown
         pygame.font.init()  # Initialize the font module
@@ -192,15 +194,19 @@ class NotificationBox:
         self.rect = pygame.Rect(x, y, width, height)
         self.color = COLOR_GRAY
         self.messages = ["Game Start!"]
+        self.latest_message = None
 
     def add_message(self, message):
         self.messages.append(message)
+        self.latest_message = message
+        self.messages = self.messages[-8:]  # Keep only the last 8 messages
 
     def draw(self, screen):
         # Draw the notification box
         pygame.draw.rect(screen, self.color, self.rect)
         # Display the messages
         font = pygame.font.SysFont('arial', 24)
-        for idx, message in enumerate(self.messages):
-            text_surface = font.render(message, True, (0, 0, 0))
-            screen.blit(text_surface, (self.rect.x + 5, self.rect.y + 5 + idx * 20))
+        if self.latest_message:
+            text_surface = font.render(self.latest_message, True, (0, 0, 0))
+            screen.blit(text_surface, (self.rect.x + 5, self.rect.y + 5 + (len(self.messages) - 1) * 20))
+

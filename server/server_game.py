@@ -125,7 +125,6 @@ class ServerGame:
         player_data = []
         for player in self.players.values():
             player_dict = player.to_dict()
-            print(f"Player data: {player_dict}")  # Debugging print
             player_data.append(player_dict)
         return player_data
 

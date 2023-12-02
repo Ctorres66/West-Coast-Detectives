@@ -12,8 +12,9 @@ def main():
     pygame.display.set_caption("Game Title")  # Set your window title
     # Initialize client components
     network = ClientNetwork(SERVER_IP, PORT)  # Replace with actual server IP and port
-    game = ClientGame(network)
-    ui = ClientUI(screen, game)
+    ui = ClientUI(screen)
+    game = ClientGame(network, ui)
+    ui.set_game(game)
     clock = pygame.time.Clock()  # Create a clock object to manage frame rate
 
     try:
@@ -29,7 +30,7 @@ def main():
             game.update_data()
             ui.ui_draw(screen)
             pygame.display.flip()
-            # clock.tick(60)
+            clock.tick(60)
 
     except KeyboardInterrupt:
         print("Game interrupted by user. Exiting...")
@@ -52,7 +53,7 @@ def handle_mouse_click(event, game, ui):
         clicked_button = ui.handle_events(event)
         if clicked_button == "START GAME":
             game.send_start_game_to_server()
-        elif clicked_button == "MOVE":
+        elif game.local_turn_number == game.current_turn_number and clicked_button == "MOVE":
             game.handle_move_action()
 
 
