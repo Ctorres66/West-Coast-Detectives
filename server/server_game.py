@@ -6,6 +6,8 @@ from shared.game_entities import Card, Player
 
 class ServerGame:
     def __init__(self, clients):
+        self.current_turn_index = 1
+        self.player_order = None
         self.deck = []
         self.initialize_deck()  # shuffle cards to initialize deck
         self.solution = None
@@ -13,18 +15,15 @@ class ServerGame:
         self.players = {}  # Dictionary to keep track of player states, <player_id, player info>
 
     def broadcast(self, message):
+        # Assuming this method sends the message to all connected clients
         for client in self.clients.values():
             try:
+                print(f"message: {message}")
                 client.sendall(message.encode())
             except Exception as e:
                 print(f"Error broadcasting to client: {e}")
-                # Handle disconnected client here
 
-    def add_player(self, player_id):
-        player = Player(player_id, character=None, current_location=None)
-        self.players[player_id] = player
-
-    def start_game(self, clients, initiating_player_id):
+    def start_game(self):
         # Shuffle and assign characters and starting positions to players
         self.assign_characters_and_positions()
 
@@ -32,20 +31,41 @@ class ServerGame:
         self.prepare_solution()
         self.deal_cards()
 
-        encoded_player_data = self.encode_players()
+        player_data = self.encode_players()
+        start_game_data = {
+            "players_data": player_data,
+            "game_start": True,
+            "current_turn_number": self.current_turn_index
+        }
+        self.broadcast(json.dumps(start_game_data, indent=4))
 
-        try:
-            clients[initiating_player_id].sendall(str.encode("GAME START"))
-            clients[initiating_player_id].sendall(str.encode(encoded_player_data))
-        except Exception as e:
-            print(f"Error sending start game data to initiating player {initiating_player_id}: {e}")
+    def update_game_state(self):
+        updated_state = self.encode_players()
+        self.broadcast(json.dumps(updated_state, indent=4))
 
-        for player_id in clients:
-            if player_id != initiating_player_id:
-                try:
-                    clients[player_id].sendall(str.encode(encoded_player_data))
-                except Exception as e:
-                    print(f"Error sending start game data to player {player_id}: {e}")
+    def next_player_turn(self):
+        while True:
+            # Increment the turn number
+            self.current_turn_index = (self.current_turn_index % len(self.players)) + 1
+            # Get the player ID corresponding to the current turn number
+            current_player_id = self.get_player_id_by_turn(self.current_turn_index)
+            # Check if the player is still active (i.e., hasn't quit the game)
+            if current_player_id in self.players:
+                # Found an active player, broadcast whose turn it is
+                self.broadcast(f"It's now player {current_player_id}'s turn.")
+                break  # Exit the loop as we have found the next player
+
+    def get_player_id_by_turn(self, turn_number):
+        for player_id, player in self.players.items():
+            if player.turn_number == turn_number:
+                return player_id
+        return None
+
+    def add_player(self, player_id):
+        turn_number = len(self.players) + 1  # Assign turn number based on the order of joining
+        player = Player(player_id, character=None, current_location=None, turn_number=turn_number)
+        print(f"turn number is {turn_number}")
+        self.players[player_id] = player
 
     def assign_characters_and_positions(self):
         player_ids = list(self.players.keys())
@@ -84,7 +104,6 @@ class ServerGame:
         print(f"Solution prepared: {self.solution}")
 
     def deal_cards(self):
-        print(f"start shuffle")
         # Shuffle the deck
         random.shuffle(self.deck)
 
@@ -92,7 +111,6 @@ class ServerGame:
         player_ids = list(self.players.keys())
         while len(self.deck) > 0:
             for player_id in player_ids:
-                print(f"player id: {player_id}")
                 if len(self.deck) == 0:
                     # Break the loop if there are no more cards to deal
                     break
@@ -102,19 +120,13 @@ class ServerGame:
 
                 # Append the card to the player's hand
                 self.players[player_id].cards.append(card)
-        print(f"shuffle")
 
     def encode_players(self):
-        # Create a dictionary representation of the player
-        player_data = {
-            'players_data': []
-        }
+        player_data = []
         for player in self.players.values():
-            player_data.get('players_data').append(
-                player.to_dict()
-            )
-        # Convert the dictionary to a JSON string
-        return json.dumps(player_data)
+            player_dict = player.to_dict()
+            player_data.append(player_dict)
+        return player_data
 
     def remove_player(self, player_id):
         # Remove a player from the game
@@ -122,168 +134,15 @@ class ServerGame:
             del self.players[player_id]
             self.broadcast(f"Player {player_id} has left the game.")
 
-    # moehtod below need revise
-
-    def update_game_state(self):
-        # Update the game state based on player actions
-        pass
-
-    def check_win_condition(self):
-        # Check if the win condition has been met
-        pass
-
-    def calculate_scores(self):
-        # Calculate and update player scores
-        pass
-
-    def handle_incoming_data(self, data):
-        # Handle data received from a player
-        pass
-
-    def disconnect_client(self, client_id):
-        # Disconnect a client safely
-        pass
-
-    def shutdown(self):
-        # Clean up and shut down the server game
-        pass
-
-    def send_valid_moves(self, player_id):
-        valid_moves = self.get_valid_moves(player_id)
-        move_data = {
-            'valid_moves': valid_moves
-        }
-        self.send_to_player(player_id, json.dumps(move_data))
-
-    def handle_move_action(self, player_id, action):
-        valid_moves = self.get_valid_moves(player_id)
-        requested_move = action['target']  # Assuming 'target' holds the desired move location
-
-        if requested_move in valid_moves:
-            # Update player position. This should handle both room and hallway moves
-            self.players[player_id]['position'] = self.get_position_from_target(requested_move)
-            self.update_game_state()  # Broadcast the new game state
+    # player move logic
+    def handle_move_action(self, player_id, move):
+        print(f"move info: {move} ")
+        # Check if the move is valid
+        if move in ROOMS:  # Assuming move is the name of a room
+            print(f"move infos: {move} ")
+            new_position = ROOM_COORDS[move]
+            self.players[player_id].current_location = new_position
+            self.update_game_state()  # Broadcast the updated game state
         else:
-            error_message = f"Invalid move. You cannot move to {requested_move}."
-            self.send_to_player(player_id, json.dumps({'error': error_message}))
-
-    def get_position_from_target(self, target):
-        # Check if the target is a room name
-        if target in self.board.room_coords:
-            return self.board.get_coords_for_room(target)
-
-        # If the target is not a room, it could be a hallway.
-        # Assuming hallways are represented by their grid coordinates (x, y)
-        elif isinstance(target, tuple) and len(target) == 2:
-            x, y = target
-            if 0 <= x < self.board.rows and 0 <= y < self.board.cols:
-                return x, y
-
-        # If the target is neither a valid room nor a valid hallway coordinate, return None or handle it appropriately
-        else:
-            return None
-
-    def get_valid_moves(self, player_id):
-        player_position = self.players[player_id]['position']
-        valid_moves = []
-
-        if self.is_in_room(player_position):
-            # Check adjacent hallways
-            valid_moves.extend(self.get_adjacent_hallways(player_position))
-            if self.is_corner_room(player_position):
-                valid_moves.append(self.get_diagonal_room(player_position))
-        else:
-            # If the player is not in a room, they must be in a hallway, so check for adjacent rooms
-            valid_moves.extend(self.get_accessible_rooms(player_position))
-
-        return valid_moves
-
-    def is_in_room(self, position):
-        # Check if the position corresponds to a room
-        # position should be a tuple (x, y) representing coordinates on the board
-        if not isinstance(position, tuple) or len(position) != 2:
-            return False
-
-        # Iterate through the room coordinates to check if the position matches any of them
-        for room_coords in self.board.room_coords.values():
-            if position == room_coords:
-                return True
-
-        return False
-
-    def is_corner_room(self, position):
-        # Define the coordinates for the four corner rooms
-        corner_rooms = [
-            self.board.room_coords[KITCHEN],  # Bottom-right corner
-            self.board.room_coords[CONSERVATORY],  # Bottom-left corner
-            self.board.room_coords[STUDY],  # Top-left corner
-            self.board.room_coords[LOUNGE]  # Top-right corner
-        ]
-
-        return position in corner_rooms
-
-    def get_adjacent_hallways(self, room_position):
-        adjacent_hallways = []
-
-        # Calculate potential adjacent hallways based on the room's position
-        # Assuming hallways are directly adjacent to rooms (i.e., one step north, south, east, or west)
-        potential_hallways = [
-            (room_position[0] - 1, room_position[1]),  # North
-            (room_position[0] + 1, room_position[1]),  # South
-            (room_position[0], room_position[1] - 1),  # West
-            (room_position[0], room_position[1] + 1)  # East
-        ]
-
-        # Filter out hallways that are outside the board or occupied
-        for hallway in potential_hallways:
-            if self.is_valid_hallway(hallway) and not self.is_hallway_occupied(hallway):
-                adjacent_hallways.append(hallway)
-
-        return adjacent_hallways
-
-    def is_valid_hallway(self, position):
-        # Check if the position is within the board's boundaries and is a hallway
-        x, y = position
-        return 0 <= x < self.board.rows and 0 <= y < self.board.cols and self.is_in_hallway(position)
-
-    def is_hallway_occupied(self, hallway_position):
-        # Check if any player is currently in the given hallway
-        return any(player['position'] == hallway_position for player in self.players.values())
-
-    def get_accessible_rooms(self, hallway_position):
-        accessible_rooms = []
-
-        # Calculate potential accessible rooms based on the hallway's position
-        potential_rooms = [
-            (hallway_position[0] - 1, hallway_position[1]),  # North
-            (hallway_position[0] + 1, hallway_position[1]),  # South
-            (hallway_position[0], hallway_position[1] - 1),  # West
-            (hallway_position[0], hallway_position[1] + 1)  # East
-        ]
-
-        # Filter out positions that are outside the board or not rooms
-        for room_pos in potential_rooms:
-            if self.is_valid_room_position(room_pos):
-                accessible_rooms.append(room_pos)
-
-        return accessible_rooms
-
-    def is_valid_room_position(self, position):
-        # Check if the position is within the board's boundaries and is a room
-        x, y = position
-        return 0 <= x < self.board.rows and 0 <= y < self.board.cols and self.is_in_room(position)
-
-    def get_diagonal_room(self, corner_room_position):
-        # Define the diagonal relationships between corner rooms
-        diagonal_pairs = {
-            self.board.room_coords[KITCHEN]: self.board.room_coords[STUDY],  # Bottom-right to top-left
-            self.board.room_coords[CONSERVATORY]: self.board.room_coords[LOUNGE],  # Bottom-left to top-right
-            self.board.room_coords[STUDY]: self.board.room_coords[KITCHEN],  # Top-left to bottom-right
-            self.board.room_coords[LOUNGE]: self.board.room_coords[CONSERVATORY]  # Top-right to bottom-left
-        }
-
-        # Return the diagonally opposite room's coordinates
-        return diagonal_pairs.get(corner_room_position)
-
-    def move_player(self, player_id, new_position):
-        pass
+            # Handle invalid move (e.g., send error message to player)
+            pass

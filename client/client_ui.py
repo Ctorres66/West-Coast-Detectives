@@ -1,21 +1,17 @@
-# ClientUI only for pygame draw without any data
 import pygame
-import random
-
 from shared.game_constants import *
 from shared.game_entities import Button, Board, Card
 
 
 class ClientUI:
-    def __init__(self):
+    def __init__(self, screen):
+        self.screen = screen
         # initial board
         self.board = Board()
-        # self.game = game  # This is an instance of the ClientGame class
-        self.screen_width = SCREEN_WIDTH
-        self.screen_height = SCREEN_HEIGHT
-        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
-
-        pygame.display.set_caption("Clueless")
+        self.game = None  # This is an instance of the ClientGame class
+        self.dropdown_rect = None
+        self.dropdown_active = False
+        self.dropdown_options = []
 
         # Initialize the UI components here
         self.board_panel = BoardPanel(
@@ -143,14 +139,36 @@ class ClientUI:
         pygame.draw.rect(self.screen, color, rect, 2)
 
 
-    def update_initial_ui(self):
-        """Update the entire game UI."""
-        self.screen.fill(COLOR_WHITE)  # Clear the screen with black or any background
-        self.board_panel.draw(self.screen)
-        pygame.display.flip()  # Update the full display Surface to the screen
+    def set_game(self, game):
+        self.game = game
 
-    def update_players(self, character, current_location):
-        print(f"Start to draw player {character} at location {current_location}")
+    def ui_draw(self, screen):
+        # Draw static elements only if the game hasn't started
+        if not self.game.game_started:
+            self.board_panel.board_panel_draw(screen)
+
+        # Always draw dynamic elements like players
+        # Assuming a method to draw players exists
+        self.draw_players(self.game.local_player_id)
+        self.board_panel.notification_box.draw(screen)
+
+    def clear_players_area(self, player):
+        """Clear the areas where players were previously drawn."""
+        # Assuming player has an attribute current_location storing their board coordinates
+        x, y = player.current_location
+        rect_x = BOARD_START_X + x * ROOM_SIZE
+        rect_y = BOARD_START_Y + y * ROOM_SIZE
+        rect = pygame.Rect(rect_x, rect_y, ROOM_SIZE, ROOM_SIZE)
+        self.screen.blit(self.board_panel.board_surface, (rect_x, rect_y), rect)
+
+    def draw_players(self, local_player_id):
+        for player_id, player_data in self.game.players.items():
+            character = player_data.get('character')
+            current_location = player_data.get('current_location')
+            # Draw each player
+            self.draw_player(character, current_location, player_id, local_player_id)
+
+    def draw_player(self, character, current_location, player_id, local_player_id):
         square_size = ROOM_SIZE
         font_size = 24
 
@@ -162,11 +180,12 @@ class ClientUI:
         circle_radius = square_size // 4
         circle_center = (x + square_size // 2, y + square_size // 2)
 
-        # Generate a random color
-        random_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        player_color = COLOR_BLACK
+        if player_id == local_player_id:
+            player_color = COLOR_PURPLE
 
         # Draw a circle with the random color
-        pygame.draw.circle(self.screen, random_color, circle_center, circle_radius)
+        pygame.draw.circle(self.screen, player_color, circle_center, circle_radius)
 
         # Create a font object
         font = pygame.font.SysFont('Arial', font_size)
@@ -213,6 +232,38 @@ class ClientUI:
         # Handle other events like button clicks, mouse hover, etc.
         return None
 
+    def handle_dropdown_selection(self, pos):
+        if not self.dropdown_active:
+            return None
+        if self.dropdown_rect.collidepoint(pos):
+            index = (pos[1] - self.dropdown_rect.y) // OPTION_HEIGHT
+            if 0 <= index < len(self.dropdown_options):
+                print(f"Dropdown option selected: {self.dropdown_options[index]}")  # Debugging line
+                return self.dropdown_options[index]
+        return None
+
+    def show_dropdown(self, room_names):
+        self.dropdown_active = True
+        self.dropdown_options = room_names
+        # Position and dimensions for the dropdown
+        self.dropdown_rect = pygame.Rect(DROPDOWN_X, DROPDOWN_Y, DROPDOWN_WIDTH, DROPDOWN_HEIGHT)
+
+    def hide_dropdown(self):
+        print("Hiding dropdown")  # Debugging line
+        self.dropdown_active = False
+        self.dropdown_options = []
+
+    def draw_dropdown(self, screen):
+        # Initialize font for dropdown
+        pygame.font.init()  # Initialize the font module
+        font = pygame.font.SysFont('Arial', 24)  # Replace 'Arial' with your font choice
+
+        pygame.draw.rect(screen, DROPDOWN_BG_COLOR, self.dropdown_rect)
+        # Draw each dropdown option
+        for i, option in enumerate(self.dropdown_options):
+            text_surface = font.render(option, True, TEXT_COLOR)
+            screen.blit(text_surface, (self.dropdown_rect.x, self.dropdown_rect.y + i * OPTION_HEIGHT))
+
 
 class BoardPanel:
     def __init__(self, button_panel, notification_box, board):
@@ -220,8 +271,13 @@ class BoardPanel:
         self.button_panel = button_panel
         self.notification_box = notification_box
 
-    def draw(self, screen):
-        self.board.draw(screen)
+        # Create a surface for the board
+        self.board_surface = pygame.Surface((self.board.cols * ROOM_SIZE, self.board.rows * ROOM_SIZE))
+        self.board.board_draw(self.board_surface)
+
+    def board_panel_draw(self, screen):
+        screen.fill(COLOR_WHITE)  # Clear the screen with black or any background
+        screen.blit(self.board_surface, (BOARD_START_X, BOARD_START_Y))
         # Draw the button panel
         self.button_panel.draw(screen)
         # Draw the notification box
@@ -257,15 +313,19 @@ class NotificationBox:
         self.rect = pygame.Rect(x, y, width, height)
         self.color = COLOR_GRAY
         self.messages = ["Game Start!"]
+        self.latest_message = None
 
     def add_message(self, message):
         self.messages.append(message)
+        self.latest_message = message
+        self.messages = self.messages[-8:]  # Keep only the last 8 messages
 
     def draw(self, screen):
         # Draw the notification box
         pygame.draw.rect(screen, self.color, self.rect)
         # Display the messages
         font = pygame.font.SysFont('arial', 24)
-        for idx, message in enumerate(self.messages):
-            text_surface = font.render(message, True, (0, 0, 0))
-            screen.blit(text_surface, (self.rect.x + 5, self.rect.y + 5 + idx * 20))
+        if self.latest_message:
+            text_surface = font.render(self.latest_message, True, (0, 0, 0))
+            screen.blit(text_surface, (self.rect.x + 5, self.rect.y + 5 + (len(self.messages) - 1) * 20))
+

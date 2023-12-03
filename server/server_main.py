@@ -1,6 +1,6 @@
+import json
 import socket
 import threading
-from _thread import start_new_thread
 from server_game import ServerGame
 from shared.game_constants import PORT
 
@@ -18,6 +18,7 @@ class Server:
 
         try:
             self.server_socket.bind((self.host, self.port))
+            self.server_socket.settimeout(1)
         except socket.error as e:
             print(f"Server binding error: {e}")
             exit()
@@ -26,35 +27,58 @@ class Server:
     def accept_connections(self):
         self.server_socket.listen(6)
         print("Waiting for connections...")
-        while len(self.clients) < 6 and not self.game_started_event.is_set():
-            conn, addr = self.server_socket.accept()
+
+        while len(self.clients) < 6 and not self.game_started:
+            try:
+                conn, addr = self.server_socket.accept()
+            except socket.timeout:
+                continue
             player_id = f"{addr[0]}:{addr[1]}"
             print(f"Connected to: {addr}, Players: {len(self.clients) + 1}/6")
             self.clients[player_id] = conn
             self.game_engine.add_player(player_id)
-            start_new_thread(self.client_thread, (conn, player_id))
+
+            # Start a new thread to handle the client
+            client_thread = threading.Thread(target=self.client_thread, args=(conn, player_id))
+            client_thread.start()
+            print(f"Waiting for game to start...")
+        print("Game Start!")
+        self.game_engine.start_game()
 
     def client_thread(self, conn, player_id):
         print(f"Client {player_id} thread started.")
         while True:
             try:
-                data = conn.recv(2048).decode()
+                data = conn.recv(4096).decode()
+                print(f"Data received from {player_id}: {data}")
                 if not data:
+                    print(f"No data received from {player_id}, breaking loop.")
                     break
+                try:
+                    action_data = json.loads(data)
+                    if action_data is None:  # Check if action_data is None
+                        continue
 
-                if data == "START_GAME":
-                    self.game_engine.start_game(self.clients, player_id)
+                    # Check for different types of actions
+                    if action_data.get('action') == 'start_game':
+                        print(f"receive start game from client")
+                        self.game_started = True
+                    elif action_data.get('action') == 'move':
+                        print(f"start to handle the move action")
+                        self.game_engine.handle_move_action(player_id, action_data.get('move'))
+                    # Add more conditions here for other types of actions
+
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding action data from client {player_id}: {e}")
+                    print(f"Raw data: {data}")
 
             except Exception as e:
                 print(f"Error with client {player_id}: {e}")
                 break
 
-        self.cleanup_client_connection(player_id, conn)
-
     def run(self):
         try:
             self.accept_connections()
-
         except KeyboardInterrupt:
             print("Server shutdown requested by user. Cleaning up...")
 
