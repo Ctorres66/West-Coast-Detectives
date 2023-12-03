@@ -55,6 +55,12 @@ def handle_mouse_click(event, game, ui):
             game.send_start_game_to_server()
         elif game.local_turn_number == game.current_turn_number and clicked_button == "MOVE":
             game.handle_move_action()
+        elif clicked_button == "SUGGESTION":
+            ui.draw_suggestion_ui()
+            game.handle_suggestion_action()
+        elif clicked_button == "ACCUSATION":
+            ui.draw_accusation_ui()
+            game.handle_accusation_action()
 
 
 if __name__ == '__main__':

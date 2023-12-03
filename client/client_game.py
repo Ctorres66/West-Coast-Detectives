@@ -167,7 +167,6 @@ class ClientGame:
             ROOM_COORDS[CONSERVATORY]: ROOM_COORDS[LOUNGE],
             ROOM_COORDS[LOUNGE]: ROOM_COORDS[CONSERVATORY]
         }
-
         return secret_passage_map.get(room_location, None)
 
     def send_player_action(self, action):
@@ -181,3 +180,10 @@ class ClientGame:
             self.network.send(action_data)
         except TypeError as e:
             print(f"Error serializing action data: {e}")
+            
+    
+    def handle_suggestion_action(self):
+        pass
+
+    def handle_accusation_action(self):
+        pass
