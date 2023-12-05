@@ -65,7 +65,7 @@ class Server:
                         self.game_started = True
                     elif action_data.get('action') == 'move':
                         print(f"start to handle the move action")
-                        self.game_engine.handle_move_action(player_id, action_data.get('move'))
+                        self.game_engine.handle_move_action(player_id, action_data.get('move_coord'))
                     # Add more conditions here for other types of actions
 
                 except json.JSONDecodeError as e:

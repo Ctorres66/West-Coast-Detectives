@@ -135,14 +135,9 @@ class ServerGame:
             self.broadcast(f"Player {player_id} has left the game.")
 
     # player move logic
-    def handle_move_action(self, player_id, move):
-        print(f"move info: {move} ")
-        # Check if the move is valid
-        if move in ROOMS:  # Assuming move is the name of a room
-            print(f"move infos: {move} ")
-            new_position = ROOM_COORDS[move]
-            self.players[player_id].current_location = new_position
-            self.update_game_state()  # Broadcast the updated game state
-        else:
-            # Handle invalid move (e.g., send error message to player)
-            pass
+    def handle_move_action(self, player_id, move_coord):
+        # move should be a coord
+        print(f"move info: {move_coord} player_id: {player_id}")
+        self.players[player_id].current_location = move_coord
+        self.update_game_state()  # Broadcast the updated game state
+

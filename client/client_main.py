@@ -43,17 +43,19 @@ def main():
 
 
 def handle_mouse_click(event, game, ui):
-    if ui.dropdown_active:
-        selected_move = ui.handle_dropdown_selection(event.pos)
-        if selected_move:
-            game.send_move_to_server(selected_move)
-            ui.hide_dropdown()
-            ui.draw()
-    else:
-        clicked_button = ui.handle_events(event)
-        if clicked_button == "START GAME":
-            game.send_start_game_to_server()
-        elif game.local_turn_number == game.current_turn_number and clicked_button == "MOVE":
+    if game.is_selecting_move:
+        print(f"start handle event room")
+        clicked_room = ui.handle_events_room(event)
+        print(f"clicked room = {clicked_room}")
+        game.handle_room_pick_action(clicked_room)
+        return
+
+    clicked_button = ui.handle_events(event)
+    if clicked_button == "START GAME":
+        game.send_start_game_to_server()
+
+    if game.local_turn_number == game.current_turn_number:
+        if clicked_button == "MOVE":
             game.handle_move_action()
         elif clicked_button == "SUGGESTION":
             ui.draw_suggestion_ui()
@@ -61,6 +63,9 @@ def handle_mouse_click(event, game, ui):
         elif clicked_button == "ACCUSATION":
             ui.draw_accusation_ui()
             game.handle_accusation_action()
+    else:
+        print("It's not your turn.")
+        ui.notification_box.add_message("It's not your turn.")
 
 
 if __name__ == '__main__':

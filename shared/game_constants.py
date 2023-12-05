@@ -1,10 +1,7 @@
 SERVER_IP = 'Royas-MacBook-Air.local'
 PORT = 5555
 
-MIN_PLAYERS_REQUIRED = 2
-
 ROWS, COLS = 5, 5
-SQUARE_SIZE = 100
 
 # Define colors using RGB tuples
 COLOR_RED = (255, 0, 0)
@@ -20,27 +17,33 @@ DEFAULT_TEXT_COLOR = (0, 0, 0)
 
 # Define your screen dimensions
 SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 720
+SCREEN_HEIGHT = 800
 
 # Define dimensions for buttons
+BUTTON_START_X = 50
+BUTTON_START_Y = 60
 BUTTON_WIDTH = 200
-BUTTON_HEIGHT = 100
-BUTTON_MARGIN = 50
+BUTTON_HEIGHT = 80
+BUTTON_MARGIN = 25
 
 # Define heights for notification area and card display
+BOX_START_X = 850
+BOX_START_Y = 60
 BOX_WIDTH = 380
-BOX_HEIGHT = 300
+BOX_HEIGHT = 500
 
 BOARD_START_X = 300
-BOARD_START_Y = 100
+BOARD_START_Y = 60
+
+BOARD_SIZE = 500
 
 ROOM_SIZE = 100
 
 CARD_WIDTH = 100
-CARD_HEIGHT = 200
+CARD_HEIGHT = 150
 
-CARD_START_X = 850
-CARD_START_Y = 450
+CARD_START_X = 300
+CARD_START_Y = 580
 
 PADDING = 10
 TEXT_HEIGHT = 20  # Height for each text line
@@ -96,39 +99,31 @@ WEAPONS = [
 
 # constants for rooms
 ROOM = 'Room'
-KITCHEN = 'Kitchen'
-BALLROOM = 'Ballroom'
-CONSERVATORY = 'Conservatory'
-BILLIARD_ROOM = 'Billiard Room'
-LIBRARY = 'Library'
-STUDY = 'Study'
-HALL = 'Hall'
-LOUNGE = 'Lounge'
-DINING_ROOM = 'Dining Room'
 
 ROOMS = [
-    KITCHEN,
-    BALLROOM,
-    CONSERVATORY,
-    BILLIARD_ROOM,
-    LIBRARY,
-    STUDY,
-    HALL,
-    LOUNGE,
-    DINING_ROOM
+    'Kitchen',
+    'Ballroom',
+    'Conservatory',
+    'Billiard Room',
+    'Library',
+    'Study',
+    'Hall',
+    'Lounge',
+    'Dining Room'
 ]
 
 ROOM_COORDS = {
-    KITCHEN: (4, 4),
-    BALLROOM: (4, 2),
-    CONSERVATORY: (4, 0),
-    BILLIARD_ROOM: (2, 2),
-    LIBRARY: (2, 0),
-    STUDY: (0, 0),
-    HALL: (0, 2),
-    LOUNGE: (0, 4),
-    DINING_ROOM: (2, 4),
+    (4, 4): 'Kitchen',
+    (4, 2): 'Ballroom',
+    (4, 0): 'Conservatory',
+    (2, 2): 'Billiard Room',
+    (2, 0): 'Library',
+    (0, 0): 'Study',
+    (0, 2): 'Hall',
+    (0, 4): 'Lounge',
+    (2, 4): 'Dining Room',
 }
+
 
 # constants for hallways
 STUDY_LIBRARY = 'study-library hallway'
@@ -145,19 +140,34 @@ CONSERVATORY_BALLROOM = 'conservatory-ballroom hallway'
 BALLROOM_KITCHEN = "ballroom-kitchen hallway"
 
 HALLWAYS = [
-    STUDY_LIBRARY,
-    STUDY_HALL,
-    HALL_BILLIARD,
-    HALL_LOUNGE,
-    LOUNGE_DINING,
-    LIBRARY_CONSERVATORY,
-    LIBRARY_BILLIARD,
-    BILLIARD_BALLROOM,
-    BILLIARD_DINING,
-    DINING_KITCHEN,
-    CONSERVATORY_BALLROOM,
-    BALLROOM_KITCHEN
+    'study-library hallway',
+    'study-hall hallway',
+    'hall-billiard hallway',
+    'hall-lounge hallway',
+    'lounge-dining hallway',
+    'library-conservatory hallway',
+    'library-billiard hallway',
+    'billiard-ballroom hallway',
+    'billiard-dining hallway',
+    'dining-kitchen hallway',
+    'conservatory-ballroom hallway',
+    'ballroom-kitchen hallway'
 ]
+
+HALLWAYS_COORDS = {
+    (1, 0): 'study-library hallway',
+    (0, 1): 'study-hall hallway',
+    (1, 2): 'hall-billiard hallway',
+    (0, 3): 'hall-lounge hallway',
+    (1, 4): 'lounge-dining hallway',
+    (3, 0): 'library-conservatory hallway',
+    (2, 1): 'library-billiard hallway',
+    (3, 2): 'billiard-ballroom hallway',
+    (2, 3): 'billiard-dining hallway',
+    (3, 4): 'dining-kitchen hallway',
+    (4, 1): 'conservatory-ballroom hallway',
+    (4, 3): 'ballroom-kitchen hallway'
+}
 
 # Constants for dropdown UI
 DROPDOWN_X = 100
