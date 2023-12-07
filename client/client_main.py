@@ -44,10 +44,11 @@ def main():
 
 def handle_mouse_click(event, game, ui):
     if game.is_selecting_move:
-        print(f"start handle event room")
         clicked_room = ui.handle_events_room(event)
-        print(f"clicked room = {clicked_room}")
-        game.handle_room_pick_action(clicked_room)
+        if clicked_room in game.valid_moves:
+            game.handle_room_pick_action(clicked_room)
+        else:
+            ui.notification_box.add_message("Invalid move. Please select a valid room.")
         return
 
     clicked_button = ui.handle_events(event)

@@ -18,7 +18,6 @@ class ServerGame:
         # Assuming this method sends the message to all connected clients
         for client in self.clients.values():
             try:
-                print(f"message: {message}")
                 client.sendall(message.encode())
             except Exception as e:
                 print(f"Error broadcasting to client: {e}")
@@ -40,26 +39,15 @@ class ServerGame:
         self.broadcast(json.dumps(start_game_data, indent=4))
 
     def update_game_state(self):
-        updated_state = self.encode_players()
-        self.broadcast(json.dumps(updated_state, indent=4))
-
-    def next_player_turn(self):
-        while True:
-            # Increment the turn number
-            self.current_turn_index = (self.current_turn_index % len(self.players)) + 1
-            # Get the player ID corresponding to the current turn number
-            current_player_id = self.get_player_id_by_turn(self.current_turn_index)
-            # Check if the player is still active (i.e., hasn't quit the game)
-            if current_player_id in self.players:
-                # Found an active player, broadcast whose turn it is
-                self.broadcast(f"It's now player {current_player_id}'s turn.")
-                break  # Exit the loop as we have found the next player
-
-    def get_player_id_by_turn(self, turn_number):
-        for player_id, player in self.players.items():
-            if player.turn_number == turn_number:
-                return player_id
-        return None
+        self.current_turn_index = (self.current_turn_index % len(self.players)) + 1
+        print(f"start update game state, current turn = {self.current_turn_index}")
+        updated_player_state = self.encode_players()
+        update_game_data = {
+            "players_data": updated_player_state,
+            "current_turn_number": self.current_turn_index
+        }
+        print(f"done update game state")
+        self.broadcast(json.dumps(update_game_data, indent=4))
 
     def add_player(self, player_id):
         turn_number = len(self.players) + 1  # Assign turn number based on the order of joining
@@ -101,7 +89,7 @@ class ServerGame:
 
         # Set aside the solution (you can store it in a variable)
         self.solution = (solution_suspect, solution_weapon, solution_room)
-        print(f"Solution prepared: {self.solution}")
+        print(f"Solution prepared")
 
     def deal_cards(self):
         # Shuffle the deck
@@ -140,4 +128,3 @@ class ServerGame:
         print(f"move info: {move_coord} player_id: {player_id}")
         self.players[player_id].current_location = move_coord
         self.update_game_state()  # Broadcast the updated game state
-

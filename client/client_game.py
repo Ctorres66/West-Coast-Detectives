@@ -3,6 +3,15 @@ import json
 from shared.game_entities import *
 
 
+def get_location_name(coord):
+    # First, try to get the name from ROOM_COORDS
+    if coord in ROOM_COORDS:
+        return ROOM_COORDS[coord]
+
+    # If not found in ROOM_COORDS, try to get the name from HALLWAYS_COORDS
+    return HALLWAYS_COORDS.get(coord)
+
+
 class ClientGame:
     def __init__(self, network, ui):
         self.is_selecting_move = False
@@ -15,6 +24,7 @@ class ClientGame:
         self.local_player_id = None
         self.local_turn_number = None
         self.local_location = None
+        self.valid_moves = None
 
     def update_data(self):
         server_data = self.network.receive()
@@ -38,6 +48,11 @@ class ClientGame:
         for player_info in data:
             print(f"player info: {player_info}")
             player_id = player_info.get('player_id')
+
+            # Convert current_location to a tuple if it's not already
+            if isinstance(player_info.get('current_location'), list):
+                player_info['current_location'] = tuple(player_info.get('current_location'))
+
             self.players[player_id] = player_info
 
             if player_id == self.network.player_id:
@@ -45,6 +60,7 @@ class ClientGame:
                 self.local_player_id = player_id
                 self.local_turn_number = player_info.get('turn_number')
                 self.local_location = player_info.get('current_location')
+                print(f"self.local_location = {self.local_location}")
 
     def send_start_game_to_server(self):
         action_data = {'action': 'start_game'}
@@ -52,7 +68,7 @@ class ClientGame:
 
     def handle_move_action(self):
         self.is_selecting_move = True
-        self.get_valid_moves()
+        self.valid_moves = self.get_valid_moves()
 
     def send_move_to_server(self, coord):
         action_data = {'action': 'move', 'move_coord': coord}
@@ -66,23 +82,23 @@ class ClientGame:
 
         # Check if the current location is a room
         if self.is_room():
+            print(f"self.current_location = {self.local_location}")
+            # Check for a secret passage and add its destination if available
+            # print(f"has secret = {self.has_secret_passage()}")
+            opposite_room = self.has_opposite_room()
+            print(f"opposite room is : {opposite_room}")
+            if opposite_room is not None:
+                valid_moves_coords.append(opposite_room)
             # If in a room, add adjacent unblocked hallways to the valid moves
             valid_moves_coords.extend(self.get_adjacent_locations())
-
-            # Check for a secret passage and add its destination if available
-            if self.has_secret_passage():
-                valid_moves_coords.append(self.get_opposite_room())
 
         # If the current location is not a room, it must be a hallway
         else:
             # Add adjacent rooms to the valid moves
-            print(f"valid_moves_coords before: {valid_moves_coords}")
+            print(f"i am in hallway and going to room...")
             valid_moves_coords.extend(self.get_adjacent_locations())
-            print(f"valid_moves_coords after: {valid_moves_coords}")
 
-        # change room highlight variable to true
-
-        valid_moves_names = [ROOM_COORDS.get(coords) for coords in valid_moves_coords]
+        valid_moves_names = [get_location_name(coords) for coords in valid_moves_coords]
         self.ui.notification_box.add_message(f"valid moves: {valid_moves_names}")
         self.ui.highlight_valid_moves(valid_moves_coords)
 
@@ -91,33 +107,20 @@ class ClientGame:
     def get_adjacent_locations(self):
         offsets = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Up, Down, Left, Right
         valid_locations = []
-        print(f"start the offset")
         for dx, dy in offsets:
-            print(f"dx = {dx}, dy = {dy}, local_location = {self.local_location}")
-
             x = self.local_location[0] + dx
             y = self.local_location[1] + dy
-            print(f"x = {x}, y = {y}")
             if x < 0 or x == 5 or y < 0 or y == 5:
-                print(f"out of boundary")
                 continue
             adjacent_location = (x, y)
-            print(f"adjacent_location: {adjacent_location}")
 
-            print(f"room_coords: {ROOM_COORDS.keys()}")
-            if tuple(self.local_location) in ROOM_COORDS.keys():
-                print(f"location is in room")
+            if self.local_location in ROOM_COORDS.keys():
                 if adjacent_location in HALLWAYS_COORDS.keys() and not self.is_hallway_occupied(adjacent_location):
                     valid_locations.append(adjacent_location)
-                    print(f"valid_locations after add valid hallway: {valid_locations}")
             else:
-                print(f"location is in hallway")
                 if adjacent_location in ROOM_COORDS.keys():
-                    print(f"valid_locations before add valid room: {valid_locations}")
                     valid_locations.append(adjacent_location)
-                    print(f"valid_locations after add valid rooms: {valid_locations}")
-
-        print(f"return valid moves list: {valid_locations}")
+        print(f"append valid moves= {valid_locations}")
         return valid_locations
 
     def is_hallway_occupied(self, location):
@@ -131,7 +134,7 @@ class ClientGame:
         secret_passage_coords = [(4, 4), (4, 0), (0, 0), (0, 4)]  # Kitchen, Conservatory, Study, Lounge
         return self.local_location in secret_passage_coords
 
-    def get_opposite_room(self):
+    def has_opposite_room(self):
         # Map of secret passages between rooms
         secret_passage_map = {
             (4, 4): (0, 0),  # Kitchen to Study
@@ -139,11 +142,16 @@ class ClientGame:
             (4, 0): (0, 4),  # Conservatory to Lounge
             (0, 4): (4, 0)  # Lounge to Conservatory
         }
-        return secret_passage_map.get(self.local_location, None)
+        for secret_room in secret_passage_map.keys():
+            print(f"local location = {self.local_location} and secret_room is {secret_room}")
+            if self.local_location == secret_room:
+                return secret_passage_map.get(self.local_location)
+        return None
 
     def is_room(self):
         # Iterate through all room coordinates
         for room_coords in ROOM_COORDS.keys():
+            print(f"{room_coords} + {ROOM_COORDS.keys()} + {self.local_location}")
             if self.local_location == room_coords:
                 return True
         return False
@@ -161,6 +169,8 @@ class ClientGame:
             print(f"Error serializing action data: {e}")
 
     def handle_room_pick_action(self, coord):
+        name = get_location_name(coord)
+        self.ui.notification_box.add_message(f"Successfully moved to: {name}")
         print(f"send picked room to server")
         self.send_move_to_server(coord)
         self.ui.reset_room_highlight()
