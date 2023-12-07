@@ -37,9 +37,9 @@ class Board:
             for y, room in enumerate(row):
 
                 # Calculate the position for each room
-                rect_x = x * ROOM_SIZE
-                rect_y = y * ROOM_SIZE
-                rect = pygame.Rect(rect_x, rect_y, ROOM_SIZE, ROOM_SIZE)
+                rect_ver = x * ROOM_SIZE
+                rect_hor = y * ROOM_SIZE
+                rect = pygame.Rect(rect_hor, rect_ver, ROOM_SIZE, ROOM_SIZE)
 
                 # Draw the room if it exists, otherwise draw a gray rectangle
                 if room:
@@ -202,24 +202,3 @@ class Player:
             'cards': [card.to_dict() for card in self.cards],
             'turn_number': self.turn_number
         }
-
-    def to_dict_move(self):
-        return {
-            'player_id': self.player_id,
-            'character': self.character,
-            'current_location': self.current_location,
-        }
-
-    def move_to_hallway(self, hallway):
-        if hallway.is_occupied():
-            raise ValueError("The hallway is blocked.")
-        self.current_location = hallway
-
-    # game logic for each player
-    def move_to_room(self, room):
-        if room.has_secret_passage():
-            self.current_location = room.get_diagonal_room()
-            # self.make_suggestion()
-            # keep commented for now, player should be able to choose to make a suggestion or not here
-        else:
-            self.current_location = room

@@ -51,12 +51,12 @@ TEXT_HEIGHT = 20  # Height for each text line
 # constants for suspect names
 SUSPECT = 'Suspect'
 
-SCARLET = 'SC'
-MUSTARD = 'CM'
-PLUM = 'PL'
-GREEN = 'GR'
-WHITE = 'WH'
-PEACOCK = 'PE'
+SCARLET = 'Miss Scarlet'
+MUSTARD = 'Colonel Mustard'
+PLUM = 'Professor Plum'
+GREEN = 'Mr. Green'
+WHITE = 'Mrs. White'
+PEACOCK = 'Mrs. Peacock'
 
 SUSPECTS = [
     SCARLET,
@@ -70,8 +70,8 @@ SUSPECTS = [
 # Dictionary mapping each suspect to their starting position
 STARTING_POSITIONS = {
     SCARLET: (0, 3),  # Replace with actual coordinates or room identifiers
-    MUSTARD: (1, 4),
-    PLUM: (1, 0),
+    MUSTARD: (0, 3),
+    PLUM: (0, 3),
     GREEN: (4, 1),
     WHITE: (4, 3),
     PEACOCK: (3, 0),

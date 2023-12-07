@@ -49,7 +49,6 @@ class ClientUI:
         self.game = game
 
     def ui_draw(self, screen):
-        print(f"rerender")
         # Clear the screen
         self.screen.fill(COLOR_WHITE)
         # Draw the board first
@@ -155,54 +154,47 @@ class ClientUI:
         pygame.draw.rect(self.screen, color, rect, 2)
 
     def draw_players(self):
+        player_count_at_location = {}
         for player_id, player_info in self.game.players.items():
-            character = player_info.get('character')
             current_location = player_info.get('current_location')
+            character = player_info.get('character')
+            if current_location not in player_count_at_location:
+                player_count_at_location[current_location] = 0
+            else:
+                player_count_at_location[current_location] += 1
             # Draw each player
-            self.draw_player(character, current_location, player_id)
-
+            self.draw_player(character, current_location, player_id, player_count_at_location[current_location])
             if player_id == self.game.local_player_id:
                 local_cards = player_info.get('cards')
                 self.draw_local_player_cards(local_cards)
 
-    def draw_player(self, character, current_location, player_id):
-        square_size = ROOM_SIZE
-        font_size = 24
+    def draw_player(self, character, current_location, player_id, num_players_already_draw):
+        # Fixed vertical offset for each player
+        vertical_offset = ROOM_SIZE // 6 * num_players_already_draw + 6
 
-        # Translate board coordinates to screen coordinates
-        x = BOARD_START_X + current_location[0] * square_size
-        y = BOARD_START_Y + current_location[1] * square_size
-
-        # Check if current location is a room and mark it as occupied
-        for row in self.board.grid:
-            for room in row:
-                if room is not None and room.coord == current_location:
-                    room.occupied = True
-                    break
-
-        # Define the radius and center of the circle
-        circle_radius = square_size // 4
-        circle_center = (x + square_size // 2, y + square_size // 2)
-
-        player_color = COLOR_BLACK
-        if player_id == self.game.local_player_id:
-            player_color = COLOR_PURPLE
-
-        # Draw a circle with the random color
-        pygame.draw.circle(self.screen, player_color, circle_center, circle_radius)
-
-        # Create a font object
-        font = pygame.font.SysFont('Arial', font_size)
-
-        # Render the text
-        text = font.render(character, True, (255, 255, 255))  # White text
-
-        # Calculate the position to center the text in the circle
+        # Define the text properties
+        font = pygame.font.SysFont('Arial', 11)
+        font.set_bold(True)
+        text = font.render(character, True, COLOR_WHITE)
         text_width, text_height = text.get_size()
-        text_x = circle_center[0] - text_width // 2
-        text_y = circle_center[1] - text_height // 2
 
-        # Draw the text
+        # Calculate the x and y positions for the rectangle, text, and circle
+        x = BOARD_START_X + current_location[1] * ROOM_SIZE
+        y = BOARD_START_Y + current_location[0] * ROOM_SIZE + vertical_offset
+
+        rect_x = x + 6
+        rect_y = y
+        rect_height = ROOM_SIZE // 6 - 2
+        rect_color = COLOR_BLACK
+        if player_id == self.game.local_player_id:
+            rect_color = COLOR_PURPLE
+        pygame.draw.rect(self.screen, rect_color, (rect_x, rect_y, ROOM_SIZE - 12, rect_height))
+
+        # Position for the text
+        text_x = rect_x + 6
+        text_y = rect_y + (rect_height - text_height) // 2
+
+        # Draw the character's name inside the rectangle
         self.screen.blit(text, (text_x, text_y))
 
     def draw_local_player_cards(self, local_cards):
@@ -225,24 +217,18 @@ class ClientUI:
             clicked_button = self.button_panel.check_click(event)
             if clicked_button:
                 # Handle the button click event
-                print(f"{clicked_button} was clicked")
                 return clicked_button
         return None
 
     def handle_events_room(self, event):
-        print(f"ui handle event")
         if event.type == pygame.MOUSEBUTTONDOWN:
-            print(f"clicked")
             clicked_board = self.check_room_click(event)
-            print(f"clicked room is : {clicked_board}")
             if clicked_board:
                 # Handle the button click event
-                print(f"{clicked_board} was clicked")
                 return clicked_board
         return None
 
     def check_room_click(self, event):
-        print(f" start to check board click")
         for row in self.board.grid:
             for room in row:
                 if room is not None:
@@ -253,7 +239,6 @@ class ClientUI:
         return None
 
     def highlight_valid_moves(self, valid_moves_coords):
-        print(f"start draw highlight rooms")
         # Set highlight for valid move locations
         for coords in valid_moves_coords:
             for row in self.board.grid:
@@ -295,22 +280,49 @@ class ButtonPanel:
 
 
 class NotificationBox:
-    def __init__(self, width=BOX_WIDTH, height=BOX_HEIGHT):
-        self.rect = pygame.Rect(BOX_START_X, BOX_START_Y, width, height)
+    def __init__(self):
+        self.rect = pygame.Rect(BOX_START_X, BOX_START_Y, BOX_WIDTH, BOX_HEIGHT)
         self.color = COLOR_GRAY
         self.messages = ["Game Start!"]
-        self.latest_message = None
 
     def add_message(self, message):
         self.messages.append(message)
-        self.latest_message = message
-        self.messages = self.messages[-8:]  # Keep only the last 8 messages
+        self.messages = self.messages[-20:]  # Keep only the last 8 messages
 
     def notification_draw(self, screen):
         # Draw the notification box
         pygame.draw.rect(screen, self.color, self.rect)
+
         # Display the messages
-        font = pygame.font.SysFont('arial', 24)
-        if self.latest_message:
-            text_surface = font.render(self.latest_message, True, (0, 0, 0))
-            screen.blit(text_surface, (self.rect.x + 5, self.rect.y + 5 + (len(self.messages) - 1) * 20))
+        font = pygame.font.SysFont('arial', 15)
+        line_height = 20  # Adjust as needed for spacing between lines
+        start_x = self.rect.x + 5  # Slight offset from the left edge of the box
+        start_y = self.rect.y + 5  # Slight offset from the top edge of the box
+        max_text_width = self.rect.width - 10  # Width of text area
+
+        current_y = start_y
+        for message in self.messages:
+            wrapped_lines = self.wrap_text(message, font, max_text_width)
+            for line in wrapped_lines:
+                # Render the message line
+                text = font.render(line, True, COLOR_BLACK)  # Use COLOR_BLACK or any other desired text color
+                screen.blit(text, (start_x, current_y))
+                current_y += line_height
+                if current_y > self.rect.bottom:  # Stop if we run out of space
+                    return
+
+    def wrap_text(self, text, font, max_width):
+        """Wrap text to fit into the specified width."""
+        words = text.split(' ')
+        lines = []
+        current_line = ''
+        for word in words:
+            test_line = current_line + word + ' '
+            text_size = font.size(test_line)
+            if text_size[0] > max_width:
+                lines.append(current_line)
+                current_line = word + ' '
+            else:
+                current_line = test_line
+        lines.append(current_line)  # Add the last line
+        return lines
