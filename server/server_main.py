@@ -61,18 +61,17 @@ class Server:
 
                     # Check for different types of actions
                     if action_data.get('action') == 'start_game':
-                        print(f"receive start game from client")
                         self.game_started = True
                     elif action_data.get('action') == 'move':
-                        print(f"start to handle the move action")
                         self.game_engine.handle_move_action(player_id, action_data.get('move_coord'))
                     elif action_data.get('action') == 'accusation':
                         self.game_engine.handle_accusation_action(player_id, action_data.get('room'), action_data.get('suspect'), action_data.get('weapon'))
+                    elif action_data.get('action') == 'skip_player':
+                        self.game_engine.update_game_state()
                     # Add more conditions here for other types of actions
 
                 except json.JSONDecodeError as e:
                     print(f"Error decoding action data from client {player_id}: {e}")
-                    print(f"Raw data: {data}")
 
             except Exception as e:
                 print(f"Error with client {player_id}: {e}")

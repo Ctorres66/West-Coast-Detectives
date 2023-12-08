@@ -77,7 +77,7 @@ class Room:
 
     def load_image(self, image_filename):
         """Load an image for the room, return None if unable to load."""
-        image_path = os.path.join('../assets/images', image_filename)
+        image_path = os.path.join('../assets', image_filename)
         try:
             return pygame.image.load(image_path)
         except pygame.error as e:
@@ -95,13 +95,10 @@ class Room:
         if event.type == pygame.MOUSEBUTTONDOWN:
             # Get the current mouse position
             mouse_pos = pygame.mouse.get_pos()
-            print(f"Mouse clicked at: {mouse_pos}")
             surface_offset = (BOARD_START_X, BOARD_START_Y)
             adjusted_rect = self.rect.move(surface_offset)
-            print(f"self.rect location: {self.rect.topleft}")
             # Check if the mouse click was within the room's rectangle
             if adjusted_rect.collidepoint(mouse_pos):
-                print(f"Clicked within the room at {adjusted_rect.topleft}")
                 return True
 
         return False
@@ -135,55 +132,44 @@ class Button:
 
 
 class Card:
-    def __init__(self, card_type, card_name, card_image=None):
+    def __init__(self, card_type, card_name=None):
         self.card_type = card_type
         self.card_name = card_name
-        self.card_image = self.load_image(card_image) if card_image else None
+        self.card_image = self.load_image(card_name) if card_name else None
 
     def to_dict(self):
         return {
             'card_type': self.card_type,
             'card_name': self.card_name,
-            'card_image': self.card_image
         }
 
-    def load_image(self, image_filename):
+    def load_image(self, card_name):
         """Load an image and return it, return None if unable to load."""
-        # Assuming 'image_filename' is a path to the image file
+        path_to_image = f"../assets/cards/{card_name}.png"
         try:
-            return pygame.image.load(image_filename)
+            return pygame.image.load(path_to_image)
         except pygame.error as e:
-            print(f"Error loading image for card '{self.card_name}': {e}")
+            print(f"Error loading image for card '{card_name}': {e}")
             return None
 
     def card_draw(self, surface, position):
-
         # Create a rectangle for the card
         card_rect = pygame.Rect(position, (CARD_WIDTH, CARD_HEIGHT))
-
         # Draw the rectangle
-        pygame.draw.rect(surface, COLOR_RED, card_rect)
-
-        # Position for the text inside the rectangle
-        text_position = (position[0] + PADDING, position[1] + PADDING)
-
-        # Draw the card type and name
-        self.draw_text(surface, self.card_type, text_position)
-        self.draw_text(surface, self.card_name, (text_position[0], text_position[1] + TEXT_HEIGHT))
-
+        pygame.draw.rect(surface, COLOR_GRAY, card_rect)
         # Check if there is an image filename and draw the image
         if self.card_image:
             self.draw_image(surface, position)
 
-    def draw_text(self, surface, text, position):
-        font = pygame.font.Font(None, 24)
-        rendered_text = font.render(text, True, COLOR_BLACK)
-        surface.blit(rendered_text, position)
-
     def draw_image(self, surface, position):
+
         if self.card_image:
-            image_rect = self.card_image.get_rect(center=(position[0] + 50, position[1] + 75))
-            surface.blit(self.card_image, image_rect)
+            scaled_image = pygame.transform.scale(self.card_image, (CARD_WIDTH, CARD_HEIGHT))
+
+            image_rect = scaled_image.get_rect(center=(position[0] + CARD_WIDTH // 2,
+                                                       position[1] + CARD_HEIGHT // 2))
+
+            surface.blit(scaled_image, image_rect)
 
 
 class Player:
@@ -196,6 +182,8 @@ class Player:
         self.loss_game = False
 
     def to_dict(self):
+        if self.loss_game:
+            self.current_location = None
         return {
             'player_id': self.player_id,
             'character': self.character,

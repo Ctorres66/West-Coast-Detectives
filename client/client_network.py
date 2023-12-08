@@ -16,7 +16,6 @@ class ClientNetwork:
             self.client.connect(self.addr)
             local_ip, local_port = self.client.getsockname()
             self.player_id = f"{local_ip}:{local_port}"
-            print(f"player_id: {self.player_id}")
         except socket.error as e:
             print(f"Connection error: {e}")
 

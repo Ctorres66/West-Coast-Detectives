@@ -28,7 +28,7 @@ def main():
             # game logic
             game.update_data()
             ui.ui_draw(screen)
-            # clock.tick(60)
+            clock.tick(60)
 
     except KeyboardInterrupt:
         print("Game interrupted by user. Exiting...")
@@ -44,8 +44,9 @@ def handle_mouse_click(event, game, ui):
     clicked_button = ui.handle_events(event)
     if clicked_button == "START GAME":
         game.send_start_game_to_server()
+        ui.notification_box.add_message("Game Start!")
 
-    if game.local_turn_number == game.current_turn_number:
+    if game.local_turn_number == game.current_turn_number and not game.skip_player:
         if clicked_button == "MOVE":
             game.handle_move_action()
         elif game.is_selecting_move:

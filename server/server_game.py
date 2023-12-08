@@ -40,19 +40,16 @@ class ServerGame:
 
     def update_game_state(self):
         self.current_turn_index = (self.current_turn_index % len(self.players)) + 1
-        print(f"start update game state, current turn = {self.current_turn_index}")
         updated_player_state = self.encode_players()
         update_game_data = {
             "players_data": updated_player_state,
             "current_turn_number": self.current_turn_index
         }
-        print(f"done update game state")
         self.broadcast(json.dumps(update_game_data, indent=4))
 
     def add_player(self, player_id):
         turn_number = len(self.players) + 1  # Assign turn number based on the order of joining
         player = Player(player_id, character=None, current_location=None, turn_number=turn_number)
-        print(f"turn number is {turn_number}")
         self.players[player_id] = player
 
     def assign_characters_and_positions(self):
@@ -89,7 +86,10 @@ class ServerGame:
 
         # Set aside the solution (you can store it in a variable)
         self.solution = (solution_room, solution_suspect, solution_weapon)
-        print(f"Solution prepared")
+        print(f"Solution prepared: "
+              f"Room - {solution_room.card_name}, "
+              f"Suspect - {solution_suspect.card_name}, "
+              f"Weapon - {solution_weapon.card_name}")
 
     def deal_cards(self):
         # Shuffle the deck
@@ -130,18 +130,24 @@ class ServerGame:
         self.update_game_state()  # Broadcast the updated game state
 
     def handle_accusation_action(self, player_id, room, suspect, weapon):
-        print(f"accusation info: room = {room}, suspect = {suspect}, weapon = {weapon}")
-        accusation = (room, suspect, weapon)
-        if accusation == self.solution:
+        # Detailed comparison
+        is_correct_accusation = all([
+            room == self.solution[0].card_name,
+            suspect == self.solution[1].card_name,
+            weapon == self.solution[2].card_name
+        ])
+
+        if is_correct_accusation:
             print(f"Player {player_id} wins! The accusation is correct.")
             end_game_data = {
                 "winner": player_id,
                 "game_end": True
             }
             self.broadcast(json.dumps(end_game_data, indent=4))
-            # return True  # Accusation is correct
         else:
             print(f"Player {player_id}'s accusation is incorrect.")
             self.players[player_id].loss_game = True
-            # return False  # Accusation is incorrect
+
+        self.update_game_state()  # Broadcast the updated game state
+
 

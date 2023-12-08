@@ -66,7 +66,7 @@ SCARLET = 'Miss Scarlet'
 MUSTARD = 'Colonel Mustard'
 PLUM = 'Professor Plum'
 GREEN = 'Mr. Green'
-WHITE = 'Mrs. White'
+ORCHID = 'Dr. Orchid'
 PEACOCK = 'Mrs. Peacock'
 
 SUSPECTS = [
@@ -74,7 +74,7 @@ SUSPECTS = [
     MUSTARD,
     PLUM,
     GREEN,
-    WHITE,
+    ORCHID,
     PEACOCK
 ]
 
@@ -84,7 +84,7 @@ STARTING_POSITIONS = {
     MUSTARD: (0, 4),
     PLUM: (0, 0),
     GREEN: (4, 1),
-    WHITE: (4, 3),
+    ORCHID: (4, 3),
     PEACOCK: (3, 0),
     # Add other characters if needed
 }
