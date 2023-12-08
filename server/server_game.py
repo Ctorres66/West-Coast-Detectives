@@ -88,7 +88,7 @@ class ServerGame:
         self.deck.remove(solution_room)
 
         # Set aside the solution (you can store it in a variable)
-        self.solution = (solution_suspect, solution_weapon, solution_room)
+        self.solution = (solution_room, solution_suspect, solution_weapon)
         print(f"Solution prepared")
 
     def deal_cards(self):
@@ -128,3 +128,20 @@ class ServerGame:
         print(f"move info: {move_coord} player_id: {player_id}")
         self.players[player_id].current_location = move_coord
         self.update_game_state()  # Broadcast the updated game state
+
+    def handle_accusation_action(self, player_id, room, suspect, weapon):
+        print(f"accusation info: room = {room}, suspect = {suspect}, weapon = {weapon}")
+        accusation = (room, suspect, weapon)
+        if accusation == self.solution:
+            print(f"Player {player_id} wins! The accusation is correct.")
+            end_game_data = {
+                "winner": player_id,
+                "game_end": True
+            }
+            self.broadcast(json.dumps(end_game_data, indent=4))
+            # return True  # Accusation is correct
+        else:
+            print(f"Player {player_id}'s accusation is incorrect.")
+            self.players[player_id].loss_game = True
+            # return False  # Accusation is incorrect
+

@@ -66,6 +66,8 @@ class Server:
                     elif action_data.get('action') == 'move':
                         print(f"start to handle the move action")
                         self.game_engine.handle_move_action(player_id, action_data.get('move_coord'))
+                    elif action_data.get('action') == 'accusation':
+                        self.game_engine.handle_accusation_action(player_id, action_data.get('room'), action_data.get('suspect'), action_data.get('weapon'))
                     # Add more conditions here for other types of actions
 
                 except json.JSONDecodeError as e:
