@@ -25,12 +25,10 @@ def main():
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     handle_mouse_click(event, game, ui)
-
             # game logic
             game.update_data()
             ui.ui_draw(screen)
-            pygame.display.flip()
-            clock.tick(60)
+            # clock.tick(60)
 
     except KeyboardInterrupt:
         print("Game interrupted by user. Exiting...")
@@ -43,14 +41,6 @@ def main():
 
 
 def handle_mouse_click(event, game, ui):
-    if game.is_selecting_move:
-        clicked_room = ui.handle_events_room(event)
-        if clicked_room in game.valid_moves:
-            game.handle_room_pick_action(clicked_room)
-        else:
-            ui.notification_box.add_message("Invalid move. Please select a valid room.")
-        return
-
     clicked_button = ui.handle_events(event)
     if clicked_button == "START GAME":
         game.send_start_game_to_server()
@@ -58,12 +48,20 @@ def handle_mouse_click(event, game, ui):
     if game.local_turn_number == game.current_turn_number:
         if clicked_button == "MOVE":
             game.handle_move_action()
+        elif game.is_selecting_move:
+            clicked_room = ui.handle_events_room(event)
+            if clicked_room in game.valid_moves:
+                game.handle_room_pick_action(clicked_room)
+            else:
+                ui.notification_box.add_message("Invalid move. Please select a valid room.")
         elif clicked_button == "SUGGESTION":
             ui.draw_suggestion_ui()
             game.handle_suggestion_action()
         elif clicked_button == "ACCUSATION":
-            ui.draw_accusation_ui()
-            game.handle_accusation_action()
+            game.is_accusing = True
+        elif game.is_accusing:
+            game.handle_accusation_action(event)
+
     else:
         print("It's not your turn.")
         ui.notification_box.add_message("It's not your turn.")

@@ -15,6 +15,7 @@ def get_location_name(coord):
 class ClientGame:
     def __init__(self, network, ui):
         self.is_selecting_move = False
+        self.is_accusing = False
         self.network = network
         self.ui = ui
         self.players = {}
@@ -25,6 +26,7 @@ class ClientGame:
         self.local_turn_number = None
         self.local_location = None
         self.valid_moves = None
+        self.accusing_select = [None, None, None]
 
     def update_data(self):
         server_data = self.network.receive()
@@ -40,6 +42,8 @@ class ClientGame:
                     self.game_started = True
                 if 'current_turn_number' in parsed_data:
                     self.current_turn_number = parsed_data['current_turn_number']
+                if 'game_end' in parsed_data:
+                    self.ui.notification_box.add_message(f"Winner is: {parsed_data['winner']}")
                 # Add more conditions here for other types of JSON keys
             except json.JSONDecodeError as e:
                 print(f"Error decoding server data: {e}")
@@ -51,7 +55,10 @@ class ClientGame:
 
             # Convert current_location to a tuple if it's not already
             if isinstance(player_info.get('current_location'), list):
-                player_info['current_location'] = tuple(player_info.get('current_location'))
+                if not player_info.get('loss_game'):
+                    player_info['current_location'] = tuple(player_info.get('current_location'))
+                else:
+                    player_info['current_location'] = None
 
             self.players[player_id] = player_info
 
@@ -178,5 +185,18 @@ class ClientGame:
     def handle_suggestion_action(self):
         pass
 
-    def handle_accusation_action(self):
-        pass
+    def handle_accusation_action(self, event):
+        if not self.ui.handle_accusation_events(event):
+            return
+        # Ensure all selections are made
+        if all(self.accusing_select):
+            action_data = {
+                'action': 'accusation',
+                'suspect': self.accusing_select[0],
+                'room': self.accusing_select[1],
+                'weapon': self.accusing_select[2]
+            }
+            self.send_player_action(action_data)
+            print(f"{self.accusing_select}")
+            self.accusing_select = [None, None, None]  # Reset the selections
+            self.is_accusing = False

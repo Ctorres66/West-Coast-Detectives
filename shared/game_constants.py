@@ -30,7 +30,7 @@ BUTTON_MARGIN = 25
 BOX_START_X = 850
 BOX_START_Y = 60
 BOX_WIDTH = 380
-BOX_HEIGHT = 500
+BOX_HEIGHT = 350
 
 BOARD_START_X = 300
 BOARD_START_Y = 60
@@ -42,8 +42,19 @@ ROOM_SIZE = 100
 CARD_WIDTH = 100
 CARD_HEIGHT = 150
 
-CARD_START_X = 300
+CARD_START_X = 50
 CARD_START_Y = 580
+
+# ACCUSATION
+
+ACC_START_X = 850
+ACC_START_Y = 420
+ACC_SUR_WIDTH = 380
+ACC_SUR_HEIGHT = 350
+ACC_COLUMN_WIDTH = 120
+ACC_ROW_HEIGHT = 30
+ACC_COLUMN_PADDING = 10
+
 
 PADDING = 10
 TEXT_HEIGHT = 20  # Height for each text line
@@ -69,9 +80,9 @@ SUSPECTS = [
 
 # Dictionary mapping each suspect to their starting position
 STARTING_POSITIONS = {
-    SCARLET: (0, 3),  # Replace with actual coordinates or room identifiers
-    MUSTARD: (0, 3),
-    PLUM: (0, 3),
+    SCARLET: (0, 2),  # Replace with actual coordinates or room identifiers
+    MUSTARD: (0, 4),
+    PLUM: (0, 0),
     GREEN: (4, 1),
     WHITE: (4, 3),
     PEACOCK: (3, 0),

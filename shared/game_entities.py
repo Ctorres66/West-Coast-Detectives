@@ -193,6 +193,7 @@ class Player:
         self.current_location = current_location
         self.cards = []
         self.turn_number = turn_number
+        self.loss_game = False
 
     def to_dict(self):
         return {
@@ -200,5 +201,6 @@ class Player:
             'character': self.character,
             'current_location': self.current_location,
             'cards': [card.to_dict() for card in self.cards],
-            'turn_number': self.turn_number
+            'turn_number': self.turn_number,
+            'loss_game': self.loss_game
         }
