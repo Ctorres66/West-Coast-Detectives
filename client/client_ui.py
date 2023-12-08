@@ -157,9 +157,7 @@ class ClientUI:
 
     def handle_accusation_events(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            print(f"event pos: {event.pos}")
-            adjusted_pos = (event.pos[0] - ACC_START_X, event.pos[1] - ACC_START_Y)     # accusation surface base
-            print(f"adj pos: {adjusted_pos}")
+            adjusted_pos = (event.pos[0] - ACC_START_X, event.pos[1] - ACC_START_Y)  # accusation surface base
             # Check for suspect, room, and weapon selection in their respective columns
             suspect_column_x = 0
             room_column_x = ACC_COLUMN_WIDTH + ACC_COLUMN_PADDING
@@ -172,20 +170,21 @@ class ClientUI:
             title_height = self.accusation_font.get_height()
 
             # Check for suspect, room, and weapon selection in their respective columns
-            if self.is_within_column(adjusted_pos, suspect_column_x, ACC_COLUMN_WIDTH, title_height, suspect_column_height):
+            if self.is_within_column(adjusted_pos, suspect_column_x, ACC_COLUMN_WIDTH, title_height,
+                                     suspect_column_height):
                 self.toggle_selection(adjusted_pos, SUSPECTS, 0)
 
             if self.is_within_column(adjusted_pos, room_column_x, ACC_COLUMN_WIDTH, title_height, room_column_height):
                 self.toggle_selection(adjusted_pos, ROOMS, 1)
 
-            if self.is_within_column(adjusted_pos, weapon_column_x, ACC_COLUMN_WIDTH, title_height, weapon_column_height):
+            if self.is_within_column(adjusted_pos, weapon_column_x, ACC_COLUMN_WIDTH, title_height,
+                                     weapon_column_height):
                 self.toggle_selection(adjusted_pos, WEAPONS, 2)
 
             # Check if the 'Send' button is clicked
             send_button_rect = pygame.Rect(260, 240, ACC_COLUMN_WIDTH, 450)
-            print(f"pos: {event.pos}{send_button_rect}")
             if send_button_rect.collidepoint(adjusted_pos):
-                print("Submit clicked")
+                self.notification_box.add_message(f"Your accusation has been successfully submitted.")
                 return True
 
         return False
@@ -197,7 +196,6 @@ class ClientUI:
         if adjusted_y < 0:
             return
         # Calculate which item is clicked based on adjusted y position
-        print(f"adjusted_pos[1]{adjusted_pos[1]}")
         item_index = adjusted_y // ACC_ROW_HEIGHT
         if 0 <= item_index < len(items):
             clicked_item = items[item_index]
@@ -206,11 +204,9 @@ class ClientUI:
                 self.game.accusing_select[select_index] = None
             else:
                 self.game.accusing_select[select_index] = clicked_item
-                print(f"Selected {clicked_item}")
 
     def is_within_column(self, pos, column_x, column_width, column_y, column_height):
         x, y = pos
-        print(f"x, y {x}, {y}, column_x{column_x}, column_w{column_width}, height{column_height}")
         return (column_x <= x <= column_x + column_width) and (column_y <= y <= column_y + column_height)
 
     def draw_text(self, text, color, rect):
@@ -230,7 +226,6 @@ class ClientUI:
 
             current_location = player_info.get('current_location')
             if current_location is None:
-                print(f"player: {player_id} loss the game, skip draw")
                 continue
 
             character = player_info.get('character')
@@ -271,17 +266,20 @@ class ClientUI:
         self.screen.blit(text, (text_x, text_y))
 
     def draw_local_player_cards(self, local_cards):
-        # Draw each card in the hand
-        for index, card_dict in enumerate(local_cards):
+        card_sort_order = {SUSPECT: 1, ROOM: 2, WEAPON: 3}
+        sorted_cards = sorted(local_cards, key=lambda player_card: (
+            card_sort_order[player_card['card_type']], player_card['card_name']))
+
+        # Draw each card in the sorted hand
+        for index, card_dict in enumerate(sorted_cards):
             # Create a Card instance from the dictionary
             card = Card(card_type=card_dict['card_type'],
-                        card_name=card_dict['card_name'],
-                        card_image=card_dict['card_image'])
+                        card_name=card_dict['card_name'])
 
             card_x = CARD_START_X + (index * (CARD_WIDTH + 10))  # Add space between cards
             card_y = CARD_START_Y
 
-            # Assuming the Card class has a draw method
+            # Assuming the Card class has a draw method adjusted for sorting
             card.card_draw(self.screen, (card_x, card_y))
 
     def handle_events(self, event):
@@ -305,9 +303,7 @@ class ClientUI:
         for row in self.board.grid:
             for room in row:
                 if room is not None:
-                    print(f"room = {room.coord}, and room is click or not: {room.room_is_clicked(event)}")
                     if room.room_is_clicked(event):
-                        print(f"{room.coord} room was clicked")
                         return room.coord
         return None
 
@@ -320,7 +316,6 @@ class ClientUI:
                         room.highlight = True  # Highlight the room
 
     def reset_room_highlight(self):
-        print(f"reset highlight rooms")
         # Reset highlights
         for row in self.board.grid:
             for room in row:
@@ -347,7 +342,6 @@ class ButtonPanel:
     def check_click(self, event):
         for button in self.buttons:
             if button.is_clicked(event):
-                print(f"{button.text} button was clicked")
                 return button.text
         return None
 
@@ -356,11 +350,11 @@ class NotificationBox:
     def __init__(self):
         self.rect = pygame.Rect(BOX_START_X, BOX_START_Y, BOX_WIDTH, BOX_HEIGHT)
         self.color = COLOR_GRAY
-        self.messages = ["Game Start!"]
+        self.messages = ["Welcome to Clueless Game!", "Waiting for players to join..."]
 
     def add_message(self, message):
         self.messages.append(message)
-        self.messages = self.messages[-20:]  # Keep only the last 8 messages
+        self.messages = self.messages[-14:]  # Keep only the last 10 messages
 
     def notification_draw(self, screen):
         # Draw the notification box
