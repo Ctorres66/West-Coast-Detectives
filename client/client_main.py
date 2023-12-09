@@ -47,7 +47,7 @@ def handle_mouse_click(event, game, ui):
         ui.notification_box.add_message("Game Start!")
 
     if game.local_turn_number == game.current_turn_number and not game.skip_player:
-        if clicked_button == "MOVE":
+        if clicked_button == "MOVE" and not game.has_moved:
             game.handle_move_action()
         elif game.is_selecting_move:
             clicked_room = ui.handle_events_room(event)
@@ -55,13 +55,25 @@ def handle_mouse_click(event, game, ui):
                 game.handle_room_pick_action(clicked_room)
             else:
                 ui.notification_box.add_message("Invalid move. Please select a valid room.")
-        elif clicked_button == "SUGGESTION":
-            ui.draw_suggestion_ui()
-            game.handle_suggestion_action()
-        elif clicked_button == "ACCUSATION":
+
+        elif game.has_moved and not game.has_suggested and clicked_button == "SUGGESTION":
+            game.is_suggesting = True
+            ui.notification_box.add_message("Please make your suggestion.")
+            # ui.draw_suggestion_ui()
+        elif game.is_suggesting:
+            game.handle_suggestion_action(event)
+
+        elif game.has_moved and not game.has_accused and clicked_button == "ACCUSATION":
             game.is_accusing = True
+            ui.notification_box.add_message("Please make your accusation.")
         elif game.is_accusing:
             game.handle_accusation_action(event)
+
+        elif (game.has_suggested or game.has_accused) and clicked_button == "END TURN":
+            game.handle_end_turn()
+
+        elif game.game_started:
+            ui.notification_box.add_message("Invalid click")
 
     else:
         print("It's not your turn.")

@@ -67,6 +67,10 @@ class Server:
                     elif action_data.get('action') == 'accusation':
                         self.game_engine.handle_accusation_action(player_id, action_data.get('room'), action_data.get('suspect'), action_data.get('weapon'))
                     elif action_data.get('action') == 'skip_player':
+                        self.game_engine.next_turn()
+                        self.game_engine.update_game_state()
+                    elif action_data.get('action') == 'end_turn':
+                        self.game_engine.next_turn()
                         self.game_engine.update_game_state()
                     # Add more conditions here for other types of actions
 

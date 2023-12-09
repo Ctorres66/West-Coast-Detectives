@@ -16,10 +16,15 @@ class ClientGame:
     def __init__(self, network, ui):
         self.is_selecting_move = False
         self.is_accusing = False
+        self.is_suggesting = False
+        self.has_moved = False
+        self.has_suggested = False
+        self.has_accused = False
+
         self.network = network
         self.ui = ui
         self.players = {}
-        self.characters = {}    # Player_id, character
+        self.characters = {}  # Player_id, character
         # local player info
         self.game_started = False
         self.current_turn_number = None
@@ -30,6 +35,7 @@ class ClientGame:
         self.skip_player = False
         self.valid_moves = None
         self.accusing_select = [None, None, None]
+        self.suggesting_select = [None, None, None]
 
     def update_data(self):
         server_data = self.network.receive()
@@ -49,7 +55,11 @@ class ClientGame:
                     winner_character = self.characters[parsed_data['winner']]
                     self.ui.notification_box.add_message(f"Winner is: {winner_character}")
                     self.game_started = False
-                    # Add more conditions here for other types of JSON keys
+                if 'loser' in parsed_data:
+                    loser_character = self.characters[parsed_data['loser']]
+                    self.ui.notification_box.add_message(f"Incorrect accusation! {loser_character} has lost the game.")
+
+                # Add more conditions here for other types of JSON keys
             except json.JSONDecodeError as e:
                 print(f"Error decoding server data: {e}")
 
@@ -85,6 +95,7 @@ class ClientGame:
 
     def handle_move_action(self):
         self.is_selecting_move = True
+        self.ui.notification_box.add_message("Please select your move.")
         self.valid_moves = self.get_valid_moves()
 
     def send_move_to_server(self, coord):
@@ -181,10 +192,23 @@ class ClientGame:
         self.ui.notification_box.add_message(f"Successfully moved to: {name}")
         self.send_move_to_server(coord)
         self.is_selecting_move = False
+        self.has_moved = True
         self.ui.reset_room_highlight()
 
-    def handle_suggestion_action(self):
-        pass
+    def handle_suggestion_action(self, event):
+        if not self.ui.handle_suggestion_events(event):
+            return
+        if all(self.suggesting_select):
+            action_data = {
+                'action': 'suggestion',
+                'room': self.local_location,
+                'suspect': self.suggesting_select[1],
+                'weapon': self.suggesting_select[2]
+            }
+            self.send_player_action(action_data)
+            self.suggesting_select = [None, None, None]  # Reset the selections
+            self.is_suggesting = False
+            self.has_suggested = True
 
     def handle_accusation_action(self, event):
         if not self.ui.handle_accusation_events(event):
@@ -193,10 +217,21 @@ class ClientGame:
         if all(self.accusing_select):
             action_data = {
                 'action': 'accusation',
-                'suspect': self.accusing_select[0],
-                'room': self.accusing_select[1],
+                'room': self.accusing_select[0],
+                'suspect': self.accusing_select[1],
                 'weapon': self.accusing_select[2]
             }
             self.send_player_action(action_data)
             self.accusing_select = [None, None, None]  # Reset the selections
             self.is_accusing = False
+            self.has_accused = True
+
+    def handle_end_turn(self):
+        self.ui.notification_box.add_message(f"Well played, {self.local_character}! "
+                                             f"Let's move to the next player's turn.")
+        self.is_accusing = False
+        self.is_suggesting = False
+        self.has_moved = False
+        self.has_suggested = False
+        self.has_accused = False
+        self.send_player_action({'action': 'end_turn'})

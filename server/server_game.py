@@ -14,13 +14,21 @@ class ServerGame:
         self.clients = clients  # Dictionary, <player_id, conn>
         self.players = {}  # Dictionary to keep track of player states, <player_id, player info>
 
-    def broadcast(self, message):
-        # Assuming this method sends the message to all connected clients
-        for client in self.clients.values():
-            try:
-                client.sendall(message.encode())
-            except Exception as e:
-                print(f"Error broadcasting to client: {e}")
+    def broadcast(self, message, client_id=None):
+        if client_id:
+            client = self.clients.get(client_id)
+            if client:
+                try:
+                    client.sendall(message.encode())
+                except Exception as e:
+                    print(f"Error sending to client {client_id}: {e}")
+        else:
+            # Assuming this method sends the message to all connected clients
+            for client in self.clients.values():
+                try:
+                    client.sendall(message.encode())
+                except Exception as e:
+                    print(f"Error broadcasting to client: {e}")
 
     def start_game(self):
         # Shuffle and assign characters and starting positions to players
@@ -38,8 +46,11 @@ class ServerGame:
         }
         self.broadcast(json.dumps(start_game_data, indent=4))
 
-    def update_game_state(self):
+    def next_turn(self):
         self.current_turn_index = (self.current_turn_index % len(self.players)) + 1
+
+    def update_game_state(self):
+
         updated_player_state = self.encode_players()
         update_game_data = {
             "players_data": updated_player_state,
@@ -147,7 +158,20 @@ class ServerGame:
         else:
             print(f"Player {player_id}'s accusation is incorrect.")
             self.players[player_id].loss_game = True
+            self.broadcast(json.dumps({"loser": player_id}, indent=4))
 
         self.update_game_state()  # Broadcast the updated game state
 
+    def handle_suggestion_action(self, suggesting_player_id, room, suspect, weapon):
+        # Iterate through players to see if anyone can disprove the suggestion
+        for player_id, player in self.players.items():
+            if player_id != suggesting_player_id:
+                disproving_cards = player.can_disprove_suggestion(room, suspect, weapon)
+                if disproving_cards:
+                    # Let the player choose one card to show, or choose one for them
+                    card_to_show = disproving_cards[0]
+                    self.broadcast(suggesting_player_id, f"Your suggestion is disproved with {card_to_show}.")
+                    return
 
+        # If no one can disprove the suggestion
+        self.broadcast("No one could disprove your suggestion.", suggesting_player_id)

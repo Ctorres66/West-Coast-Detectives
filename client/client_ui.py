@@ -3,6 +3,11 @@ from shared.game_constants import *
 from shared.game_entities import Button, Board, Card
 
 
+def is_within_column(pos, column_x, column_width, column_y, column_height):
+    x, y = pos
+    return (column_x <= x <= column_x + column_width) and (column_y <= y <= column_y + column_height)
+
+
 class ClientUI:
     def __init__(self, screen):
         self.screen = screen
@@ -15,24 +20,6 @@ class ClientUI:
         self.board = Board()
         self.button_panel = ButtonPanel()
         self.notification_box = NotificationBox()
-
-        # Add text input components
-        self.suggestion_button = pygame.Rect(200, 400, 200, 50)
-        # Initialize font
-        self.font = pygame.font.Font(None, 32)  # You can replace 'None' with a specific font file if needed
-        # Add text input components
-        self.suggestion_button = pygame.Rect(200, 400, 200, 50)
-        self.suggestion_input_boxes = [
-            pygame.Rect(200, 100, 200, 32),
-            pygame.Rect(200, 150, 200, 32),
-            pygame.Rect(200, 200, 200, 32),
-        ]
-        self.suggestion_text = ['Enter character', 'Enter weapon', 'Enter room']
-        self.suggestion_texts = ['', '', '']
-        self.send_suggestion_button = pygame.Rect(250, 250, 100, 40)
-
-        # New state variable to track if suggestion is sent
-        self.suggestion_sent = False
 
         self.accusation_surface = pygame.Surface((ACC_SUR_WIDTH, ACC_SUR_HEIGHT))
         self.send_button_rect = pygame.Rect(260, 240, ACC_COLUMN_WIDTH, 450)
@@ -57,49 +44,35 @@ class ClientUI:
 
         if self.game.is_accusing:
             self.draw_accusation_ui()
-
+        if self.game.is_suggesting:
+            self.draw_suggestion_ui()
         # Update the display
         pygame.display.flip()
 
     def draw_suggestion_ui(self):
-        # Draw suggestion UI components only if suggestion is not sent
-        if not self.suggestion_sent:
-            pygame.draw.rect(self.screen, (0, 255, 0), self.send_suggestion_button)
+        self.accusation_surface.fill(COLOR_WHITE)  # Fill with a background color
 
-            for i, box in enumerate(self.suggestion_input_boxes):
-                pygame.draw.rect(self.screen, (0, 0, 255), box, 2)
-                self.draw_text(self.suggestion_texts[i], (0, 0, 0), box)  # Use black color for text
+        # Draw the accusation UI components on the accusation surface
+        if self.game.is_suggesting:
+            # Draw columns with highlighting for selected items
+            self.draw_column_on_surface(ACC_COLUMN_WIDTH + ACC_COLUMN_PADDING, SUSPECTS, "Suspects",
+                                        ACC_COLUMN_WIDTH,
+                                        self.accusation_font,
+                                        self.game.suggesting_select[1])
+            self.draw_column_on_surface(2 * (ACC_COLUMN_WIDTH + ACC_COLUMN_PADDING), WEAPONS, "Weapons",
+                                        ACC_COLUMN_WIDTH,
+                                        self.accusation_font,
+                                        self.game.suggesting_select[2])
 
-            # Draw text on button
-            self.draw_text('SEND', (255, 255, 255), self.send_suggestion_button)
+            # Draw the 'Send' button
+            pygame.draw.rect(self.accusation_surface, COLOR_PURPLE, self.send_button_rect)
+            # Draw the 'Send' button text
+            send_button_font = pygame.font.Font(None, 30)
+            send_button_text_surface = send_button_font.render("Submit", True, COLOR_WHITE)
+            self.accusation_surface.blit(send_button_text_surface, (285, 290))
 
-    def handle_suggestion_events(self, event):
-        # Handle events for the suggestion UI
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.suggestion_button.collidepoint(event.pos):
-                self.draw_suggestion_ui()
-            elif self.send_suggestion_button.collidepoint(event.pos):
-                # Send the suggestion tuple to the server
-                suggestion_tuple = tuple(self.suggestion_texts)
-                # Assuming you have a method in the ClientGame class to handle sending suggestions
-                self.game.handle_send_suggestion(suggestion_tuple)
-                # Set the suggestion_sent flag to True to hide the UI components
-                self.suggestion_sent = True
-
-        elif event.type == pygame.KEYDOWN:
-            for i, box in enumerate(self.suggestion_input_boxes):
-                if box.collidepoint(event.pos) and not self.suggestion_sent:
-                    if event.key == pygame.K_RETURN:
-                        # Move to the next input box or send suggestion on Enter
-                        self.suggestion_texts[i] = self.suggestion_text[i]
-                        if i < 2:
-                            self.suggestion_texts[i + 1] = self.suggestion_text[i + 1]
-                    elif event.key == pygame.K_BACKSPACE:
-                        # Allow backspace to delete characters
-                        self.suggestion_texts[i] = self.suggestion_texts[i][:-1]
-                    else:
-                        # Append typed characters to the current input box
-                        self.suggestion_texts[i] += event.unicode
+        # Blit the accusation surface onto the main screen
+        self.screen.blit(self.accusation_surface, (ACC_START_X, ACC_START_Y))
 
     def draw_accusation_ui(self):
         self.accusation_surface.fill(COLOR_WHITE)  # Fill with a background color
@@ -107,11 +80,11 @@ class ClientUI:
         # Draw the accusation UI components on the accusation surface
         if self.game.is_accusing:
             # Draw columns with highlighting for selected items
-            self.draw_column_on_surface(0, SUSPECTS, "Suspects",
+            self.draw_column_on_surface(0, ROOMS, "Rooms",
                                         ACC_COLUMN_WIDTH,
                                         self.accusation_font,
                                         self.game.accusing_select[0])
-            self.draw_column_on_surface(ACC_COLUMN_WIDTH + ACC_COLUMN_PADDING, ROOMS, "Rooms",
+            self.draw_column_on_surface(ACC_COLUMN_WIDTH + ACC_COLUMN_PADDING, SUSPECTS, "Suspects",
                                         ACC_COLUMN_WIDTH,
                                         self.accusation_font,
                                         self.game.accusing_select[1])
@@ -155,12 +128,42 @@ class ClientUI:
             # Optionally, draw a rectangle border for each item
             pygame.draw.rect(self.accusation_surface, COLOR_BLACK, (start_x, item_y, width, ACC_ROW_HEIGHT), 1)
 
+
+    def handle_suggestion_events(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            adjusted_pos = (event.pos[0] - ACC_START_X, event.pos[1] - ACC_START_Y)  # accusation surface base
+            # Check for suspect, room, and weapon selection in their respective columns
+            suspect_column_x = ACC_COLUMN_WIDTH + ACC_COLUMN_PADDING
+            weapon_column_x = 2 * (ACC_COLUMN_WIDTH + ACC_COLUMN_PADDING)
+            # Define the column's heights
+            suspect_column_height = ACC_ROW_HEIGHT * len(SUSPECTS)
+            weapon_column_height = ACC_ROW_HEIGHT * len(WEAPONS)
+
+            title_height = self.accusation_font.get_height()
+
+            # Check for suspect, room, and weapon selection in their respective columns
+            if is_within_column(adjusted_pos, suspect_column_x, ACC_COLUMN_WIDTH, title_height,
+                                suspect_column_height):
+                self.toggle_selection(adjusted_pos, SUSPECTS, 1)
+
+            if is_within_column(adjusted_pos, weapon_column_x, ACC_COLUMN_WIDTH, title_height,
+                                weapon_column_height):
+                self.toggle_selection(adjusted_pos, WEAPONS, 2)
+
+            # Check if the 'Send' button is clicked
+            send_button_rect = pygame.Rect(260, 240, ACC_COLUMN_WIDTH, 450)
+            if send_button_rect.collidepoint(adjusted_pos):
+                self.notification_box.add_message(f"Your suggestion has been successfully submitted.")
+                return True
+
+        return False
+
     def handle_accusation_events(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             adjusted_pos = (event.pos[0] - ACC_START_X, event.pos[1] - ACC_START_Y)  # accusation surface base
             # Check for suspect, room, and weapon selection in their respective columns
-            suspect_column_x = 0
-            room_column_x = ACC_COLUMN_WIDTH + ACC_COLUMN_PADDING
+            room_column_x = 0
+            suspect_column_x = ACC_COLUMN_WIDTH + ACC_COLUMN_PADDING
             weapon_column_x = 2 * (ACC_COLUMN_WIDTH + ACC_COLUMN_PADDING)
             # Define the column's heights
             suspect_column_height = ACC_ROW_HEIGHT * len(SUSPECTS)
@@ -170,15 +173,15 @@ class ClientUI:
             title_height = self.accusation_font.get_height()
 
             # Check for suspect, room, and weapon selection in their respective columns
-            if self.is_within_column(adjusted_pos, suspect_column_x, ACC_COLUMN_WIDTH, title_height,
-                                     suspect_column_height):
-                self.toggle_selection(adjusted_pos, SUSPECTS, 0)
 
-            if self.is_within_column(adjusted_pos, room_column_x, ACC_COLUMN_WIDTH, title_height, room_column_height):
-                self.toggle_selection(adjusted_pos, ROOMS, 1)
+            if is_within_column(adjusted_pos, room_column_x, ACC_COLUMN_WIDTH, title_height, room_column_height):
+                self.toggle_selection(adjusted_pos, ROOMS, 0)
+            if is_within_column(adjusted_pos, suspect_column_x, ACC_COLUMN_WIDTH, title_height,
+                                suspect_column_height):
+                self.toggle_selection(adjusted_pos, SUSPECTS, 1)
 
-            if self.is_within_column(adjusted_pos, weapon_column_x, ACC_COLUMN_WIDTH, title_height,
-                                     weapon_column_height):
+            if is_within_column(adjusted_pos, weapon_column_x, ACC_COLUMN_WIDTH, title_height,
+                                weapon_column_height):
                 self.toggle_selection(adjusted_pos, WEAPONS, 2)
 
             # Check if the 'Send' button is clicked
@@ -204,18 +207,6 @@ class ClientUI:
                 self.game.accusing_select[select_index] = None
             else:
                 self.game.accusing_select[select_index] = clicked_item
-
-    def is_within_column(self, pos, column_x, column_width, column_y, column_height):
-        x, y = pos
-        return (column_x <= x <= column_x + column_width) and (column_y <= y <= column_y + column_height)
-
-    def draw_text(self, text, color, rect):
-        # Draw text on the specified rectangle
-        txt_surface = self.font.render(text, True, color)
-        width = max(rect.width, txt_surface.get_width() + 10)
-        rect.w = width
-        self.screen.blit(txt_surface, (rect.x + 5, rect.y + 5))
-        pygame.draw.rect(self.screen, color, rect, 2)
 
     def draw_players(self):
         player_count_at_location = {}
@@ -243,7 +234,10 @@ class ClientUI:
         # Define the text properties
         font = pygame.font.SysFont('Arial', 11)
         font.set_bold(True)
-        text = font.render(character, True, COLOR_WHITE)
+        text_color = COLOR_BLACK
+        if player_id == self.game.local_player_id:
+            text_color = COLOR_WHITE
+        text = font.render(character, True, text_color)
         text_width, text_height = text.get_size()
 
         # Calculate the x and y positions for the rectangle, text, and circle
@@ -253,7 +247,7 @@ class ClientUI:
         rect_x = x + 6
         rect_y = y
         rect_height = ROOM_SIZE // 6 - 2
-        rect_color = COLOR_BLACK
+        rect_color = COLOR_WHITE
         if player_id == self.game.local_player_id:
             rect_color = COLOR_PURPLE
         pygame.draw.rect(self.screen, rect_color, (rect_x, rect_y, ROOM_SIZE - 12, rect_height))
@@ -295,7 +289,6 @@ class ClientUI:
         if event.type == pygame.MOUSEBUTTONDOWN:
             clicked_board = self.check_room_click(event)
             if clicked_board:
-                # Handle the button click event
                 return clicked_board
         return None
 
