@@ -192,3 +192,10 @@ class Player:
             'turn_number': self.turn_number,
             'loss_game': self.loss_game
         }
+
+    def can_disprove_suggestion(self, room, suspect, weapon):
+        disproving_cards = []
+        for card in self.cards:
+            if card.matches(room, suspect, weapon):
+                disproving_cards.append(card)
+        return disproving_cards
