@@ -196,6 +196,6 @@ class Player:
     def can_disprove_suggestion(self, room, suspect, weapon):
         disproving_cards = []
         for card in self.cards:
-            if card.matches(room, suspect, weapon):
+            if card.matches(room) or card.matches(suspect) or card.matches(weapon):
                 disproving_cards.append(card)
         return disproving_cards
