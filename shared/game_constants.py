@@ -1,4 +1,4 @@
-SERVER_IP = "LAPTOP-UGJ09KMA"
+SERVER_IP = "Royas-Air.attlocal.net"
 PORT = 5555
 
 ROWS, COLS = 5, 5
@@ -94,7 +94,7 @@ WEAPON = 'Weapon'
 
 ROPE = 'Rope'
 LEAD_PIPE = 'Lead Pipe'
-KNIFE = 'Knife'
+DAGGER = 'Dagger'
 WRENCH = 'Wrench'
 CANDLESTICK = 'Candlestick'
 REVOLVER = 'Revolver'
@@ -102,7 +102,7 @@ REVOLVER = 'Revolver'
 WEAPONS = [
     ROPE,
     LEAD_PIPE,
-    KNIFE,
+    DAGGER,
     WRENCH,
     CANDLESTICK,
     REVOLVER

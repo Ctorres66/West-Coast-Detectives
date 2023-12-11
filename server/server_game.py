@@ -134,10 +134,12 @@ class ServerGame:
             self.broadcast(f"Player {player_id} has left the game.")
 
     # player move logic
-    def handle_move_action(self, player_id, move_coord):
+    def handle_move_action(self, player_id, move_coord, is_room):
         # move should be a coord
-        print(f"move info: {move_coord} player_id: {player_id}")
+        print(f"move info: {move_coord} player_id: {player_id} is_room: {is_room}")
         self.players[player_id].current_location = move_coord
+        if not is_room:
+            self.next_turn()
         self.update_game_state()  # Broadcast the updated game state
 
     def handle_accusation_action(self, player_id, room, suspect, weapon):
@@ -157,35 +159,29 @@ class ServerGame:
             self.broadcast(json.dumps(end_game_data, indent=4))
         else:
             print(f"Player {player_id}'s accusation is incorrect.")
-            self.players[player_id].loss_game = True
+            self.players[player_id].lose_game = True
             self.broadcast(json.dumps({"loser": player_id}, indent=4))
 
         self.update_game_state()  # Broadcast the updated game state
 
-    def handle_suggestion_action(self, suggesting_player_id, room, suspect, weapon):
-        suggestion = (room, suspect, weapon)
-
+    def handle_suggestion_action(self, suggesting_player_id, suggesting_select):
         # Print statements for debugging
-        print(f"Received suggestion from {suggesting_player_id}: {suggestion}")
-
-        # Iterate through players to see if anyone can disprove the suggestion
+        print(f"Received suggestion from {suggesting_player_id}: {suggesting_select}")
+        suggested_cards = []
         for player_id, player in self.players.items():
             if player_id != suggesting_player_id:
-                disproving_cards = player.can_disprove_suggestion(room, suspect, weapon)
-                if disproving_cards:
-                    # Print statement for debugging
-                    print(f"{player_id} can disprove the suggestion with {disproving_cards[0]}")
+                card_you_suggest = player_has_card(player, suggesting_select)
+                if card_you_suggest is not None:
+                    self.broadcast(json.dumps({"card_you_suggest": card_you_suggest}, indent=4), player_id)
+                    suggested_cards.append(card_you_suggest)
 
-                    # Let the player choose one card to show, or choose one for them
-                    card_to_show = disproving_cards[0]
-                    self.broadcast(f"Your suggestion is disproved with {card_to_show}.", suggesting_player_id)
+        print(f"{suggesting_player_id} can disprove the suggestion with {suggested_cards}")
+        self.broadcast(json.dumps({"suggested_cards": suggested_cards}, indent=4), suggesting_player_id)
 
-                    # Broadcast the result to all players
-                    self.broadcast(f"{player_id} has {card_to_show}.")
-                    return
 
-        # Print statement for debugging
-        print("No one could disprove the suggestion.")
-
-        # If no one can disprove the suggestion
-        self.broadcast("No one could disprove your suggestion.", suggesting_player_id)
+def player_has_card(player_info, cards):
+    for hand_cards in player_info.cards:
+        for each_suggest_card in cards:
+            if hand_cards.card_name == each_suggest_card:
+                return each_suggest_card
+    return None

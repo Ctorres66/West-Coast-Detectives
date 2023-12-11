@@ -42,6 +42,8 @@ class ClientGame:
         if server_data:
             try:
                 # Attempt to decode JSON data
+                print(f"parsed_data: {json.loads(server_data)}")
+
                 parsed_data = json.loads(server_data)
                 print("server data is: {}".format(parsed_data))
                 # Process different types of JSON data
@@ -58,6 +60,21 @@ class ClientGame:
                 if 'loser' in parsed_data:
                     loser_character = self.characters[parsed_data['loser']]
                     self.ui.notification_box.add_message(f"Incorrect accusation! {loser_character} has lost the game.")
+
+                if 'card_you_suggest' in parsed_data:
+                    cards = parsed_data['card_you_suggest']
+                    print(f"card_you_suggest: {cards}.")
+                    self.ui.notification_box.add_message(f"Your suggestion is disproved with "
+                                                         f"{cards}.")
+
+                if 'suggested_cards' in parsed_data:
+                    cards = parsed_data['suggested_cards']
+                    print(f"suggested_cards: {cards}")
+                    if cards:
+                        self.ui.notification_box.add_message(f"Your can disprove the suggestion with "
+                                                             f"{cards}.")
+                    else:
+                        self.ui.notification_box.add_message("No one could disprove the suggestion.")
 
                 # Add more conditions here for other types of JSON keys
             except json.JSONDecodeError as e:
@@ -84,7 +101,7 @@ class ClientGame:
                 if self.local_turn_number is None:
                     self.local_turn_number = player_info.get('turn_number')
                 if self.players[player_id]['turn_number'] == self.current_turn_number:
-                    if self.players[player_id]['loss_game']:
+                    if self.players[player_id]['lose_game']:
                         self.skip_player = True
                         action_data = {'action': 'skip_player'}
                         self.send_player_action(action_data)
@@ -99,7 +116,7 @@ class ClientGame:
         self.valid_moves = self.get_valid_moves()
 
     def send_move_to_server(self, coord):
-        action_data = {'action': 'move', 'move_coord': coord}
+        action_data = {'action': 'move', 'move_coord': coord, 'is_room': self.is_room()}
         self.send_player_action(action_data)
 
     def get_valid_moves(self):
@@ -188,22 +205,23 @@ class ClientGame:
             print(f"Error serializing action data: {e}")
 
     def handle_room_pick_action(self, coord):
+        self.local_location = coord
         name = get_location_name(coord)
         self.ui.notification_box.add_message(f"Successfully moved to: {name}")
-        self.send_move_to_server(coord)
         self.is_selecting_move = False
         self.has_moved = True
         self.ui.reset_room_highlight()
+        self.send_move_to_server(coord)
 
     def handle_suggestion_action(self, event):
         if not self.ui.handle_suggestion_events(event):
             return
         if all(self.suggesting_select):
+            self.suggesting_select[0] = get_location_name(self.local_location)
+            print(f"room suggestion: {self.suggesting_select[0]}")
             action_data = {
                 'action': 'suggestion',
-                'room': self.local_location,
-                'suspect': self.suggesting_select[1],
-                'weapon': self.suggesting_select[2]
+                'suggesting_select': self.suggesting_select
             }
             self.send_player_action(action_data)
             self.suggesting_select = [None, None, None]  # Reset the selections

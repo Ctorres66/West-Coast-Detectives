@@ -179,10 +179,10 @@ class Player:
         self.current_location = current_location
         self.cards = []
         self.turn_number = turn_number
-        self.loss_game = False
+        self.lose_game = False
 
     def to_dict(self):
-        if self.loss_game:
+        if self.lose_game:
             self.current_location = None
         return {
             'player_id': self.player_id,
@@ -190,12 +190,5 @@ class Player:
             'current_location': self.current_location,
             'cards': [card.to_dict() for card in self.cards],
             'turn_number': self.turn_number,
-            'loss_game': self.loss_game
+            'lose_game': self.lose_game
         }
-
-    def can_disprove_suggestion(self, room, suspect, weapon):
-        disproving_cards = []
-        for card in self.cards:
-            if card.matches(room) or card.matches(suspect) or card.matches(weapon):
-                disproving_cards.append(card)
-        return disproving_cards

@@ -63,11 +63,14 @@ class Server:
                     if action_data.get('action') == 'start_game':
                         self.game_started = True
                     elif action_data.get('action') == 'move':
-                        self.game_engine.handle_move_action(player_id, action_data.get('move_coord'))
+                        self.game_engine.handle_move_action(player_id, action_data.get('move_coord'),
+                                                            action_data.get('is_room'))
                     elif action_data.get('action') == 'accusation':
-                        self.game_engine.handle_accusation_action(player_id, action_data.get('room'), action_data.get('suspect'), action_data.get('weapon'))
+                        self.game_engine.handle_accusation_action(player_id, action_data.get('room'),
+                                                                  action_data.get('suspect'), action_data.get('weapon'))
                     elif action_data.get('action') == 'suggestion':
-                        self.game_engine.handle_suggestion_action(player_id, action_data.get('room'), action_data.get('suspect'), action_data.get('weapon'))
+                        print(f"suggesting_select: {action_data.get('suggesting_select')}")
+                        self.game_engine.handle_suggestion_action(player_id, action_data.get('suggesting_select'))
                     elif action_data.get('action') == 'skip_player':
                         self.game_engine.next_turn()
                         self.game_engine.update_game_state()

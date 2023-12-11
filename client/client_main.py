@@ -56,13 +56,13 @@ def handle_mouse_click(event, game, ui):
             else:
                 ui.notification_box.add_message("Invalid move. Please select a valid room.")
 
-        elif game.has_moved and not game.has_suggested and clicked_button == "SUGGESTION":
+        elif game.is_room() and game.has_moved and not game.has_suggested and clicked_button == "SUGGESTION":
             game.is_suggesting = True
             ui.notification_box.add_message("Please make your suggestion.")
         elif game.is_suggesting:
             game.handle_suggestion_action(event)
 
-        elif game.has_moved and not game.has_accused and clicked_button == "ACCUSATION":
+        elif game.is_room() and game.has_moved and not game.has_accused and clicked_button == "ACCUSATION":
             game.is_accusing = True
             ui.notification_box.add_message("Please make your accusation.")
         elif game.is_accusing:
