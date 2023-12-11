@@ -128,7 +128,6 @@ class ClientUI:
             # Optionally, draw a rectangle border for each item
             pygame.draw.rect(self.accusation_surface, COLOR_BLACK, (start_x, item_y, width, ACC_ROW_HEIGHT), 1)
 
-
     def handle_suggestion_events(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             adjusted_pos = (event.pos[0] - ACC_START_X, event.pos[1] - ACC_START_Y)  # accusation surface base
@@ -144,16 +143,19 @@ class ClientUI:
             # Check for suspect, room, and weapon selection in their respective columns
             if is_within_column(adjusted_pos, suspect_column_x, ACC_COLUMN_WIDTH, title_height,
                                 suspect_column_height):
-                self.toggle_selection(adjusted_pos, SUSPECTS, 1)
+                self.toggle_selection(adjusted_pos, SUSPECTS, 1, "suggestion")
 
             if is_within_column(adjusted_pos, weapon_column_x, ACC_COLUMN_WIDTH, title_height,
                                 weapon_column_height):
-                self.toggle_selection(adjusted_pos, WEAPONS, 2)
+                self.toggle_selection(adjusted_pos, WEAPONS, 2, "suggestion")
+
+            self.game.accusing_select[0] = self.game.local_location
 
             # Check if the 'Send' button is clicked
             send_button_rect = pygame.Rect(260, 240, ACC_COLUMN_WIDTH, 450)
             if send_button_rect.collidepoint(adjusted_pos):
                 self.notification_box.add_message(f"Your suggestion has been successfully submitted.")
+                self.notification_box.add_message(f"Accusation is {self.game.accusing_select}")
                 return True
 
         return False
@@ -175,24 +177,25 @@ class ClientUI:
             # Check for suspect, room, and weapon selection in their respective columns
 
             if is_within_column(adjusted_pos, room_column_x, ACC_COLUMN_WIDTH, title_height, room_column_height):
-                self.toggle_selection(adjusted_pos, ROOMS, 0)
+                self.toggle_selection(adjusted_pos, ROOMS, 0, "accusation")
             if is_within_column(adjusted_pos, suspect_column_x, ACC_COLUMN_WIDTH, title_height,
                                 suspect_column_height):
-                self.toggle_selection(adjusted_pos, SUSPECTS, 1)
+                self.toggle_selection(adjusted_pos, SUSPECTS, 1, "accusation")
 
             if is_within_column(adjusted_pos, weapon_column_x, ACC_COLUMN_WIDTH, title_height,
                                 weapon_column_height):
-                self.toggle_selection(adjusted_pos, WEAPONS, 2)
+                self.toggle_selection(adjusted_pos, WEAPONS, 2, "accusation")
 
             # Check if the 'Send' button is clicked
             send_button_rect = pygame.Rect(260, 240, ACC_COLUMN_WIDTH, 450)
+
             if send_button_rect.collidepoint(adjusted_pos):
                 self.notification_box.add_message(f"Your accusation has been successfully submitted.")
                 return True
 
         return False
 
-    def toggle_selection(self, adjusted_pos, items, select_index):
+    def toggle_selection(self, adjusted_pos, items, select_index, accusationOrSuggestion):
         adjusted_y = adjusted_pos[1]
 
         # Ensure the adjusted_y is not negative after subtracting the title height
@@ -204,7 +207,10 @@ class ClientUI:
             clicked_item = items[item_index]
             # Toggle the selection
             if clicked_item == self.game.accusing_select[select_index]:
-                self.game.accusing_select[select_index] = None
+                if accusationOrSuggestion == "suggestion":
+                    self.game.suggesting_select[select_index] = None
+                elif accusationOrSuggestion == "accusation":
+                    self.game.accusing_select[select_index] = None
             else:
                 self.game.accusing_select[select_index] = clicked_item
 

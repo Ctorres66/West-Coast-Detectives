@@ -59,7 +59,6 @@ def handle_mouse_click(event, game, ui):
         elif game.has_moved and not game.has_suggested and clicked_button == "SUGGESTION":
             game.is_suggesting = True
             ui.notification_box.add_message("Please make your suggestion.")
-            # ui.draw_suggestion_ui()
         elif game.is_suggesting:
             game.handle_suggestion_action(event)
 

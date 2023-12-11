@@ -1,4 +1,4 @@
-SERVER_IP = 'Royas-MacBook-Air.local'
+SERVER_IP = "LAPTOP-UGJ09KMA"
 PORT = 5555
 
 ROWS, COLS = 5, 5

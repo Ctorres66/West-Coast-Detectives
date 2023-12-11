@@ -163,15 +163,29 @@ class ServerGame:
         self.update_game_state()  # Broadcast the updated game state
 
     def handle_suggestion_action(self, suggesting_player_id, room, suspect, weapon):
+        suggestion = (room, suspect, weapon)
+
+        # Print statements for debugging
+        print(f"Received suggestion from {suggesting_player_id}: {suggestion}")
+
         # Iterate through players to see if anyone can disprove the suggestion
         for player_id, player in self.players.items():
             if player_id != suggesting_player_id:
                 disproving_cards = player.can_disprove_suggestion(room, suspect, weapon)
                 if disproving_cards:
+                    # Print statement for debugging
+                    print(f"{player_id} can disprove the suggestion with {disproving_cards[0]}")
+
                     # Let the player choose one card to show, or choose one for them
                     card_to_show = disproving_cards[0]
-                    self.broadcast(suggesting_player_id, f"Your suggestion is disproved with {card_to_show}.")
+                    self.broadcast(f"Your suggestion is disproved with {card_to_show}.", suggesting_player_id)
+
+                    # Broadcast the result to all players
+                    self.broadcast(f"{player_id} has {card_to_show}.")
                     return
+
+        # Print statement for debugging
+        print("No one could disprove the suggestion.")
 
         # If no one can disprove the suggestion
         self.broadcast("No one could disprove your suggestion.", suggesting_player_id)
