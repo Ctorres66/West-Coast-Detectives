@@ -149,13 +149,13 @@ class ClientUI:
                                 weapon_column_height):
                 self.toggle_selection(adjusted_pos, WEAPONS, 2, "suggestion")
 
-            self.game.accusing_select[0] = self.game.local_location
+            self.game.suggesting_select[0] = self.game.local_location
 
             # Check if the 'Send' button is clicked
             send_button_rect = pygame.Rect(260, 240, ACC_COLUMN_WIDTH, 450)
             if send_button_rect.collidepoint(adjusted_pos):
                 self.notification_box.add_message(f"Your suggestion has been successfully submitted.")
-                self.notification_box.add_message(f"Accusation is {self.game.accusing_select}")
+                self.notification_box.add_message(f"Suggestion is {self.game.suggesting_select}")
                 return True
 
         return False
@@ -212,7 +212,10 @@ class ClientUI:
                 elif accusationOrSuggestion == "accusation":
                     self.game.accusing_select[select_index] = None
             else:
-                self.game.accusing_select[select_index] = clicked_item
+                if accusationOrSuggestion == "suggestion":
+                    self.game.suggesting_select[select_index] = clicked_item
+                elif accusationOrSuggestion == "accusation":
+                    self.game.accusing_select[select_index] = clicked_item
 
     def draw_players(self):
         player_count_at_location = {}
