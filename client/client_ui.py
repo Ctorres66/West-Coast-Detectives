@@ -155,7 +155,6 @@ class ClientUI:
             send_button_rect = pygame.Rect(260, 240, ACC_COLUMN_WIDTH, 450)
             if send_button_rect.collidepoint(adjusted_pos):
                 self.notification_box.add_message(f"Your suggestion has been successfully submitted.")
-                self.notification_box.add_message(f"Suggestion is {self.game.suggesting_select}")
                 return True
 
         return False
@@ -329,7 +328,7 @@ class ButtonPanel:
     def __init__(self):
         self.buttons = []
         colors = [(239, 244, 248), (192, 211, 228), (243, 219, 233), (149, 155, 189), (149, 155, 149)]
-        texts = ["START GAME", "MOVE", "SUGGESTION", "ACCUSATION", "END TURN"]
+        texts = ["START GAME", "MOVE", "ACCUSATION", "SUGGESTION", "END TURN"]
 
         for i, (color, text) in enumerate(zip(colors, texts)):
             # Calculate the y position for each button
@@ -356,7 +355,7 @@ class NotificationBox:
 
     def add_message(self, message):
         self.messages.append(message)
-        self.messages = self.messages[-14:]  # Keep only the last 10 messages
+        self.messages = self.messages[-12:]  # Keep only the last 10 messages
 
     def notification_draw(self, screen):
         # Draw the notification box

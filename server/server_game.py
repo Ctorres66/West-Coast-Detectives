@@ -1,5 +1,7 @@
 import json
 import random
+import time
+
 from shared.game_constants import *
 from shared.game_entities import Card, Player
 
@@ -7,7 +9,6 @@ from shared.game_entities import Card, Player
 class ServerGame:
     def __init__(self, clients):
         self.current_turn_index = 1
-        self.player_order = None
         self.deck = []
         self.initialize_deck()  # shuffle cards to initialize deck
         self.solution = None
@@ -39,24 +40,38 @@ class ServerGame:
         self.deal_cards()
 
         player_data = self.encode_players()
+        print(f"player data when start: {player_data}")
         start_game_data = {
             "players_data": player_data,
             "game_start": True,
             "current_turn_number": self.current_turn_index
         }
-        self.broadcast(json.dumps(start_game_data, indent=4))
+        self.broadcast(json.dumps({'start_game': start_game_data}, indent=4))
 
     def next_turn(self):
-        self.current_turn_index = (self.current_turn_index % len(self.players)) + 1
+        print("Next turn triggered.")
+        while True:
+            # Increment the current turn index and wrap around if it exceeds the number of players
+            self.current_turn_index = self.current_turn_index % len(self.players) + 1
+            print(f"current_turn_index: {self.current_turn_index}")
+
+            # Retrieve the player information for the current turn index
+            for player_id, player_info in self.players.items():
+                print(f"player_info.turn_number:{player_info.turn_number}")
+                if self.current_turn_index == player_info.turn_number:
+                    # Check if the player has lost the game
+                    if not player_info.lose_game:
+                        # If the player hasn't lost, it's their turn
+                        print(f"It's now player {player_id}'s turn.")
+                        return  # Exit the loop and proceed with the game
 
     def update_game_state(self):
-
         updated_player_state = self.encode_players()
         update_game_data = {
-            "players_data": updated_player_state,
-            "current_turn_number": self.current_turn_index
+            "current_turn_number": self.current_turn_index,
+            "players_data": updated_player_state
         }
-        self.broadcast(json.dumps(update_game_data, indent=4))
+        self.broadcast(json.dumps({'update_game_data': update_game_data}, indent=4))
 
     def add_player(self, player_id):
         turn_number = len(self.players) + 1  # Assign turn number based on the order of joining
@@ -140,7 +155,7 @@ class ServerGame:
         self.players[player_id].current_location = move_coord
         if not is_room:
             self.next_turn()
-        self.update_game_state()  # Broadcast the updated game state
+        print(f"turn number after move: {self.current_turn_index}")
 
     def handle_accusation_action(self, player_id, room, suspect, weapon):
         # Detailed comparison
@@ -152,28 +167,41 @@ class ServerGame:
 
         if is_correct_accusation:
             print(f"Player {player_id} wins! The accusation is correct.")
-            end_game_data = {
-                "winner": player_id,
-                "game_end": True
-            }
-            self.broadcast(json.dumps(end_game_data, indent=4))
+            self.broadcast(json.dumps({"winner": player_id}, indent=4))
+            return True
         else:
             print(f"Player {player_id}'s accusation is incorrect.")
             self.players[player_id].lose_game = True
             self.broadcast(json.dumps({"loser": player_id}, indent=4))
-
-        self.update_game_state()  # Broadcast the updated game state
+            return False
 
     def handle_suggestion_action(self, suggesting_player_id, suggesting_select):
-        # Print statements for debugging
+        suggest_data = {
+            "who_suggest": suggesting_player_id,
+            "suggest_what": suggesting_select
+        }
+        self.broadcast(json.dumps(suggest_data))
+        time.sleep(1)
         print(f"Received suggestion from {suggesting_player_id}: {suggesting_select}")
-        suggested_cards = []
+        print(f"suspect: {suggesting_select[1]}")
+        for player_id, player_info in self.players.items():
+            print(f"self.players[player_id].character: {self.players[player_id].character}")
+            if self.players[player_id].character == suggesting_select[1]:
+                print(f"suspect is player")
+                self.players[player_id].current_location = self.players[suggesting_player_id].current_location
+                print(f"after assign new location: {self.players[player_id].current_location}")
+
+        suggested_cards = {}  # disproven by , cards
         for player_id, player in self.players.items():
             if player_id != suggesting_player_id:
                 card_you_suggest = player_has_card(player, suggesting_select)
                 if card_you_suggest is not None:
-                    self.broadcast(json.dumps({"card_you_suggest": card_you_suggest}, indent=4), player_id)
-                    suggested_cards.append(card_you_suggest)
+                    suggest = {
+                        "card": card_you_suggest,
+                        "suggest_id": suggesting_player_id
+                    }
+                    self.broadcast(json.dumps({"card_you_suggest": suggest}, indent=4), player_id)
+                    suggested_cards[player_id] = card_you_suggest
 
         print(f"{suggesting_player_id} can disprove the suggestion with {suggested_cards}")
         self.broadcast(json.dumps({"suggested_cards": suggested_cards}, indent=4), suggesting_player_id)
