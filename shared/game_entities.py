@@ -55,7 +55,6 @@ class Room:
         self.coord = coord
         self.image = self.load_image(image_filename) if image_filename else None
         self.highlight = False  # Set to False by default
-        self.occupied = False
         self.rect = None
 
     def room_draw(self, surface, rect):
@@ -106,7 +105,7 @@ class Room:
 
 class Button:
     def __init__(self, x, y, text, color):
-        self.font = pygame.font.SysFont('Arial', 24)
+        self.font = pygame.font.SysFont('Arial', 20)
         self.rect = pygame.Rect(x, y, BUTTON_WIDTH, BUTTON_HEIGHT)
         self.color = color,
         self.text = text
@@ -131,26 +130,27 @@ class Button:
         return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)
 
 
+def load_image(card_name):
+    """Load an image and return it, return None if unable to load."""
+    path_to_image = f"../assets/cards/{card_name}.png"
+    try:
+        return pygame.image.load(path_to_image)
+    except pygame.error as e:
+        print(f"Error loading image for card '{card_name}': {e}")
+        return None
+
+
 class Card:
     def __init__(self, card_type, card_name=None):
         self.card_type = card_type
         self.card_name = card_name
-        self.card_image = self.load_image(card_name) if card_name else None
+        self.card_image = load_image(card_name) if card_name else None
 
     def to_dict(self):
         return {
             'card_type': self.card_type,
             'card_name': self.card_name,
         }
-
-    def load_image(self, card_name):
-        """Load an image and return it, return None if unable to load."""
-        path_to_image = f"../assets/cards/{card_name}.png"
-        try:
-            return pygame.image.load(path_to_image)
-        except pygame.error as e:
-            print(f"Error loading image for card '{card_name}': {e}")
-            return None
 
     def card_draw(self, surface, position):
         # Create a rectangle for the card

@@ -62,22 +62,31 @@ class Server:
                     # Check for different types of actions
                     if action_data.get('action') == 'start_game':
                         self.game_started = True
+
                     elif action_data.get('action') == 'move':
+                        print(f"receive move")
                         self.game_engine.handle_move_action(player_id, action_data.get('move_coord'),
                                                             action_data.get('is_room'))
+
                     elif action_data.get('action') == 'accusation':
-                        self.game_engine.handle_accusation_action(player_id, action_data.get('room'),
-                                                                  action_data.get('suspect'), action_data.get('weapon'))
+                        if self.game_engine.handle_accusation_action(player_id, action_data.get('room'),
+                                                                     action_data.get('suspect'),
+                                                                     action_data.get('weapon')):
+                            self.game_started = False
+                        else:
+                            print(f"accusation wrong, move to next player")
+                            self.game_engine.next_turn()
+
                     elif action_data.get('action') == 'suggestion':
                         print(f"suggesting_select: {action_data.get('suggesting_select')}")
+
                         self.game_engine.handle_suggestion_action(player_id, action_data.get('suggesting_select'))
-                    elif action_data.get('action') == 'skip_player':
-                        self.game_engine.next_turn()
-                        self.game_engine.update_game_state()
+
                     elif action_data.get('action') == 'end_turn':
                         self.game_engine.next_turn()
-                        self.game_engine.update_game_state()
                     # Add more conditions here for other types of actions
+                    print(f"updating state")
+                    self.game_engine.update_game_state()
 
                 except json.JSONDecodeError as e:
                     print(f"Error decoding action data from client {player_id}: {e}")
